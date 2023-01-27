@@ -2,7 +2,7 @@
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
     minute: "*/15"
-    job: ~/.setup/run-ansible-pull.sh -o
+    job: flock -n /tmp/ansible-pull-lock ~/.setup/run-ansible-pull.sh -o
 
 - name: Ansible-pull reboot cron
   ansible.builtin.cron:

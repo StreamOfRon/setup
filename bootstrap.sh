@@ -10,7 +10,7 @@ if [[ ! -x $BREW || $? -eq 1 ]] ; then
 fi
 
 NONINTERACTIVE=1
-$BREW install ansible
+$BREW install ansible flock
 
 mkdir -p $SETUPDIR
 
