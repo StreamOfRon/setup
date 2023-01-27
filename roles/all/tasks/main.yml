@@ -3,20 +3,32 @@
     name: flock
     state: present
 
+- name: Check flock path
+  ansible.builtin.command: which flock
+  changed_when: False
+  register: flockpath
+
+- name: Disable cron email
+  ansible.builtin.cron:
+    name: MAILTO
+    env: yes
+    job: ""
+
 - name: Ansible-pull cron job
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
     minute: "*/15"
-    job: flock -n /tmp/ansible-pull-lock ~/.setup/run-ansible-pull.sh -o
+    job: "{{ flockpath.stdout }} -n /tmp/ansible-pull-lock {{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -o"
 
 - name: Ansible-pull reboot cron
   ansible.builtin.cron:
     name: ansible-pull reboot
     special_time: reboot
-    job: ~/.setup/run-ansible-pull.sh -e ON_REBOOT=true
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true"
 
 - name: Check ZSH path
   ansible.builtin.command: which zsh
+  changed_when: False
   register: zshpath
 
 - name: Check ZSH stat
@@ -24,24 +36,12 @@
     path: "{{zshpath.stdout}}"
   register: zsh_stat
 
-- name: Show zsh stat
-  ansible.builtin.debug:
-    var: zsh_stat.stat.executable
-
-- name: Get homebrew prefix
-  ansible.builtin.command: brew --prefix
-  register: homebrew_prefix
-
 - name: Setup ZSH Environment
   block:
     - name: Install OMZ
       ansible.builtin.command:
         cmd: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
         creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-
-    - name: Get homebrew prefix
-      ansible.builtin.command: brew --prefix
-      register: homebrew_prefix
 
     - name: Install powerlevel10k theme
       community.general.homebrew:
@@ -52,9 +52,6 @@
       ansible.builtin.template:
         src: zshrc.j2
         dest: "{{ lookup('env', 'HOME') }}/.zshrc"
-      vars:
-        home_dir: "{{ lookup('env', 'HOME') }}"
-        brew_prefix: "{{ homebrew_prefix }}"
 
     - name: .p10k.zsh
       ansible.builtin.copy:
