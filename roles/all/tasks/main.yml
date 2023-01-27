@@ -7,4 +7,5 @@
 - name: Ansible-pull reboot cron
   ansible.builtin.cron:
     name: ansible-pull reboot
+    special_time: reboot
     job: ~/.setup/run-ansible-pull.sh -e ON_REBOOT=true
