@@ -1,3 +1,8 @@
+- name: Install flock
+  ansible.builtin.package:
+    name: flock
+    state: present
+
 - name: Ansible-pull cron job
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
