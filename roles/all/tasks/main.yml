@@ -1,0 +1,10 @@
+- name: Ansible-pull cron job
+  ansible.builtin.cron:
+    name: ansible-pull quarter-hourly
+    minute: "*/15"
+    job: ~/.setup/run-ansible-pull.sh -o
+
+- name: Ansible-pull reboot cron
+  ansible.builtin.cron:
+    name: ansible-pull reboot
+    job: ~/.setup/run-ansible-pull.sh -e ON_REBOOT=true
