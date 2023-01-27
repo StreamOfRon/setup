@@ -1,9 +1,0 @@
-all:
-  hosts:
-    localhost:
-      vars:
-        ansible_connection: local
-  children:
-    home:
-      hosts:
-        sapphire:

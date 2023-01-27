@@ -1,0 +1,5 @@
+[pull]
+	ff = only
+[push]
+	default = simple
+	autoSetupRemote = true
