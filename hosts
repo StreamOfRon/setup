@@ -1,6 +1,6 @@
 all:
   hosts:
-    sapphire:
+    localhost:
   children:
     home:
       hosts:
