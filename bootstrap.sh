@@ -10,9 +10,8 @@ if [[ ! -x $BREW || $? -eq 1 ]] ; then
 fi
 
 NONINTERACTIVE=1
-$BREW install ansible git
+$BREW install ansible
 
 mkdir -p $SETUPDIR
-git clone https://github.com/StreamOfRon/setup.git --depth 1 --branch main --single-branch $SETUPDIR
 
-$SETUPDIR/run-ansible-pull.sh
+curl -fsSL https://raw.githubusercontent.com/StreamOfRon/setup/main/run-ansible-pull.sh | zsh
