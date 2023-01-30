@@ -1,0 +1,36 @@
+- hosts: all
+  gather_facts: true
+
+  vars_files:
+    - default.config.yml
+
+  pre_tasks:
+    - name: Include local configuration
+      include_vars: "{{ item }}"
+      with_fileglob:
+        - "{{ lookup('env', 'HOME') }}/.ansible-config"
+    - name: Update package managers
+      block:
+        - name: Update homewbrew packages
+          community.general.homebrew:
+            update_homebrew: true
+          when: ansible_pkg_mgr == "homebrew"
+        - name: Update apt packages
+          ansible.builtin.apt:
+            update_cache: true
+          when: ansible_pkg_mgr == "apt"
+        - name: Update pacman packages
+          community.general.pacman:
+            update_cache: true
+          when: ansible_pkg_mgr == "pacman"
+
+
+  tasks:
+    - import_tasks: tasks/ansible-pull-cron.yml
+      when: setup_ansible_pull
+    - import_tasks: tasks/oh-my-zsh.yml
+      when: oh_my_zsh
+    - import_tasks: tasks/dotfiles.yml
+      when: dotfiles
+    - import_tasks: tasks/vscode.yml
+      when: vscode

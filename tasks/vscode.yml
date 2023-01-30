@@ -1,0 +1,21 @@
+- name: Install fira code font
+  community.general.homebrew_cask:
+    name:
+      - font-fira-code
+      - font-fira-code-nerd-font
+
+- name: Install visual studio code
+  community.general.homebrew_cask:
+    name: visual-studio-code
+
+- name: Install VSCode Config (Mac)
+  ansible.builtin.copy:
+    src: files/vscode-settings.json
+    dest: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User/settings.json"
+  when: ansible_system == "Darwin"
+
+- name: Install VSCode Config (Linux)
+  ansible.builtin.copy:
+    src: files/vscode-settings.json
+    dest: "{{ lookup('env', 'HOME') }}/.config/Code/User/settings.json"
+  when: ansible_system == "Linux"

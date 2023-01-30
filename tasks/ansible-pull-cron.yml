@@ -1,0 +1,27 @@
+- name: Install flock
+  ansible.builtin.package:
+    name: flock
+    state: present
+
+- name: Check flock path
+  ansible.builtin.command: which flock
+  changed_when: False
+  register: flockpath
+
+- name: Disable cron email
+  ansible.builtin.cron:
+    name: MAILTO
+    env: yes
+    job: ""
+
+- name: Ansible-pull cron job
+  ansible.builtin.cron:
+    name: ansible-pull quarter-hourly
+    minute: "*/15"
+    job: "{{ flockpath.stdout }} -n /tmp/ansible-pull-lock {{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -o >/dev/null 2>&1"
+
+- name: Ansible-pull reboot cron
+  ansible.builtin.cron:
+    name: ansible-pull reboot
+    special_time: reboot
+    job: "{{ flockpath.stdout }} -n /tmp/ansible-pull-lock {{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true >/dev/null 2>&1"
