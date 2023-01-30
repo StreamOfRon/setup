@@ -1,17 +1,53 @@
 #!/usr/bin/env zsh
 
-BREW=$(which brew)
-SETUPDIR="${HOME}/.setup"
 SETUPREPO="https://github.com/StreamOfRon/setup.git"
+SETUPDIR="${HOME}/.setup"
+OS=$(uname)
 
-if [[ ! -x $BREW || $? -eq 1 ]] ; then
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  BREW="$(which brew)"
-fi
+case "${OS}" in
+"Darwin")
+  BREW=$(which brew)
+  if [[ ! -x $BREW || $? -eq 1 ]] ; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    BREW="$(which brew)"
+  fi
 
-NONINTERACTIVE=1
-$BREW install ansible flock
+  NONINTERACTIVE=1
+  $BREW install ansible flock
+  ;;
+
+"Linux")
+  SUPPORTED=('apt' 'pamac')
+  PKGMGR=""
+  for name in $SUPPORTED ; do
+    PKGMGR=$(which ${name})
+    if $? == 0 ; then
+      case "${name}" in
+      "apt")
+        $PKGMGR update
+        $PKGMGR install ansible flock
+        ;;
+
+      "pamac")
+        $PKGMGR update
+        $PKGMGR install ansible flock
+        ;;
+
+      *)
+        echo "No supported package manager for Linux detected"
+        exit 1
+        ;;
+      esac
+    fi
+  done
+
+  ;;
+
+*)
+  echo "Unknownx OS environment: ${OS}"
+  exit 1
+  ;;
+esac
 
 mkdir -p $SETUPDIR
-
 curl -fsSL https://raw.githubusercontent.com/StreamOfRon/setup/main/run-ansible-pull.sh | zsh
