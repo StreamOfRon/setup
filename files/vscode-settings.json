@@ -1,0 +1,20 @@
+{
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.tabSize": 2,
+  "workbench.editorAssociations": {
+      "*.ipynb": "jupyter.notebook.ipynb"
+  },
+  "workbench.startupEditor": "newUntitledFile",
+  "extensions.ignoreRecommendations": true,
+  "security.workspace.trust.enabled": false,
+  "redhat.telemetry.enabled": false,
+  "vs-kubernetes": {
+      "vs-kubernetes.crd-code-completion": "disabled"
+  },
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true,
+  "files.autoSave": "afterDelay"
+}

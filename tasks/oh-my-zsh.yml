@@ -1,0 +1,33 @@
+- name: Install OMZ
+  ansible.builtin.command:
+    cmd: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+
+- name: Install powerlevel10k theme and font with homebrew
+  block:
+    - name: Tap repos for p10k
+      community.general.homebrew_tap:
+        name:
+          - romkatv/powerlevel10k
+          - homebrew/cask-fonts
+        state: present
+    - name: Install meslo fonts
+      community.general.homebrew_cask:
+        name:
+          - font-meslo-for-powerline
+    - name: Install powerlevel10k
+      community.general.homebrew:
+        name:
+          - powerlevel10k
+        state: present
+  when: ansible_pkg_mgr == "homebrew"
+
+- name: .zshrc
+  ansible.builtin.copy:
+    src: files/zshrc
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+
+- name: .p10k.zsh
+  ansible.builtin.copy:
+    src: files/p10k.zsh
+    dest: "{{ lookup('env', 'HOME') }}/.p10k.zsh"

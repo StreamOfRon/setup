@@ -1,0 +1,4 @@
+setup_ansible_pull: true
+oh_my_zsh: false
+dotfiles: true
+vscode: false
