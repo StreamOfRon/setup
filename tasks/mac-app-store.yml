@@ -1,0 +1,67 @@
+- name: Install mas CLI
+  community.general.homebrew:
+    name:
+      - mas
+    state: present
+
+- name: Install apps
+  block:
+    - name: Install app store apps
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: "{{ install_mas_apps }}"
+
+    - name: Install apple office apps
+      community.general.mas:
+        state: "{{ package_state }}"
+        id:
+          - 409183694  # Keynote
+          - 409201541  # Pages
+          - 409203825  # Numbers
+      when: install_apple_office
+
+    - name: Install Garageband
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: 682658836
+      when: install_garageband
+
+    - name: Install iMovie
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: 408981434
+      when: install_imovie
+  vars:
+    package_state: present
+
+- name: Uninstall apps
+  block:
+    - name: Uninstall app store apps
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: "{{ remove_mas_apps }}"
+
+    - name: Remove apple office apps
+      community.general.mas:
+        state: "{{ package_state }}"
+        id:
+          - 409183694  # Keynote
+          - 409201541  # Pages
+          - 409203825  # Numbers
+      when: not install_apple_office
+
+    - name: Remove Garageband
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: 682658836
+      when: not install_garageband
+
+    - name: Remove iMovie
+      community.general.mas:
+        state: "{{ package_state }}"
+        id: 408981434
+      when: not install_imovie
+  vars:
+    package_state: absent
+  become: true
+  ignore_errors: true # Need to figure out how to do this with the permissions requried.

@@ -34,3 +34,5 @@
       when: dotfiles
     - import_tasks: tasks/vscode.yml
       when: vscode
+    - import_tasks: tasks/mac-app-store.yml
+      when: mac_app_store

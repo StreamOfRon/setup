@@ -1,4 +1,11 @@
-setup_ansible_pull: true
-oh_my_zsh: false
 dotfiles: true
+install_apple_office: false
+install_garageband: false
+install_imovie: false
+mac_app_store: false
+oh_my_zsh: false
+setup_ansible_pull: true
 vscode: false
+
+install_mas_apps: []
+remove_mas_apps: []
