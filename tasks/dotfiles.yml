@@ -1,14 +1,13 @@
-- name: .vimrc
+- name: Copy dotfiles
   ansible.builtin.copy:
-    src: files/vimrc
-    dest: "{{ lookup('env', 'HOME') }}/.vimrc"
-
-- name: .zprofile
-  ansible.builtin.copy:
-    src: files/zprofile
-    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
+    src: "{{ item }}"
+    dest: "{{ lookup('env', 'HOME') }}/"
+  loop:
+    - files/.vimrc
+    - files/.zprofile
+    - files/.gitignore
 
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
-    block: "{{ lookup('ansible.builtin.file', 'files/gitconfig') }}"
+    block: "{{ lookup('ansible.builtin.file', 'files/.gitconfig') }}"
