@@ -3,10 +3,16 @@
     name:
       - font-fira-code
       - font-fira-code-nerd-font
+  when:
+    - ansible_pkg_mgr == "homebrew"
+    - "['font-fira-code', 'font-fira-code-nerd-font'] | difference(installed_brew_casks.stdout) | length > 0"
 
 - name: Install visual studio code
   community.general.homebrew_cask:
     name: visual-studio-code
+  when:
+    - ansible_pkg_mgr == "homebrew"
+    - "['visual-studio-code'] | difference(installed_brew_casks.stdout) | length > 0"
 
 - name: Install VSCode Config (Mac)
   ansible.builtin.copy:
