@@ -1,5 +1,5 @@
 - name: Install OMZ
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
     creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
 
