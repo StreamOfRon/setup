@@ -1,6 +1,6 @@
 - name: Install OMZ
   ansible.builtin.command:
-    cmd: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
     creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
 
 - name: Install powerlevel10k theme and font with homebrew
