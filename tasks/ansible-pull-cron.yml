@@ -8,7 +8,7 @@
   ansible.builtin.cron:
     name: PATH
     env: yes
-    job: "/opt/homebrew/bin:/usr/local/bin:$PATH"
+    job: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 - name: Ansible-pull cron job
   ansible.builtin.cron:
