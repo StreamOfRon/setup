@@ -4,6 +4,12 @@
     env: yes
     job: ""
 
+- name: Setup cron PATH
+  ansible.builtin.cron:
+    name: PATH
+    env: yes
+    job: "/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 - name: Ansible-pull cron job
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
