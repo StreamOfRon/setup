@@ -1,0 +1,14 @@
+- name: Get list of installed formulae
+  ansible.builtin.shell: brew list --formulae -1
+  register: installed_brew_formulae
+  changed_when: false
+
+- name: Get list of installed casks
+  ansible.builtin.shell: brew list --casks -1
+  register: installed_brew_casks
+  changed_when: false
+
+- name: Get list of taps
+  ansible.builtin.shell: brew tap
+  register: brew_taps
+  changed_when: false

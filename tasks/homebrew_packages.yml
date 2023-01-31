@@ -2,22 +2,30 @@
   community.general.homebrew:
     name: "{{ install_formulae }}"
     state: present
-  when: install_formulae
+  when:
+    - install_formulae
+    - install_formulae | difference(installed_brew_formulae.stdout) | length > 0
 
 - name: "Install {{ name }} homewbrew casks"
   community.general.homebrew_cask:
     name: "{{ install_casks }}"
     state: present
-  when: install_casks
+  when:
+    - install_casks
+    - install_casks | difference(installed_brew_casks.stdout) | length > 0
 
 - name: "Remove {{ name }} homewbrew formulae"
   community.general.homebrew:
     name: "{{ remove_formulae }}"
     state: absent
-  when: remove_formulae
+  when:
+    - remove_formulae
+    - remove_formulae | intersect(installed_brew_formulae.stdout) | length > 0
 
 - name: "Remove {{ name }} homewbrew formulae"
   community.general.homebrew_cask:
     name: "{{ remove_casks }}"
     state: absent
-  when: remove_casks
+  when:
+     - remove_casks
+     - remove_casks | intersect(installed_brew_casks.stdout) | length > 0

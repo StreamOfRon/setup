@@ -5,10 +5,28 @@
     - default.config.yml
 
   pre_tasks:
+    - name: Check old options
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.ansible-config"
+      register: old_conf
+
+    - name: Move old options file to new name
+      block:
+        - name: Copy to new name
+          ansible.builtin.copy:
+            src: "{{ lookup('env', 'HOME') }}/.ansible-config"
+            dest: "{{ lookup('env', 'HOME') }}/.setup-options"
+        - name: Remove old file
+          ansible.builtin.file:
+            path: "{{ lookup('env', 'HOME') }}/.ansible-config"
+            state: absent
+      when: old_conf.stat.exists
+
     - name: Include local configuration
       include_vars: "{{ item }}"
-      with_fileglob:
-        - "{{ lookup('env', 'HOME') }}/.ansible-config"
+      loop:
+        - "{{ lookup('env', 'HOME') }}/.setup-options"
+
     - name: Update package managers
       block:
         - name: Update homewbrew packages
@@ -23,6 +41,11 @@
           community.general.pacman:
             update_cache: true
           when: ansible_pkg_mgr == "pacman"
+    - name: Get list of installed packages
+      block:
+        - name: Get installed homebew packages
+          import_tasks: tasks/homebrew_list.yml
+          when: ansible_pkg_mgr == "homebrew"
 
 
   tasks:

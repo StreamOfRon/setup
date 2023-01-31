@@ -11,15 +11,18 @@
           - romkatv/powerlevel10k
           - homebrew/cask-fonts
         state: present
+      when: "['romkatv/powerlevel10k', 'homebrew/cask-fonts'] | difference(brew_taps.stdout) | length > 0"
     - name: Install meslo fonts
       community.general.homebrew_cask:
         name:
           - font-meslo-for-powerline
+      when: "['font-meslo-for-powerline'] | difference(installed_brew_casks.stdout) | length > 0"
     - name: Install powerlevel10k
       community.general.homebrew:
         name:
           - powerlevel10k
         state: present
+      when: "['powerlevel10k'] | difference(installed_brew_formulae.stdout) | length > 0"
   when: ansible_pkg_mgr == "homebrew"
 
 - name: .zshrc
