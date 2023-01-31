@@ -9,3 +9,34 @@ vscode: false
 
 install_mas_apps: []
 remove_mas_apps: []
+
+install_kube_apps: false
+kube_formulae:
+  - argocd
+  - kubernetes-cli
+kube_casks:
+  - openlens
+  - podman-desktop
+
+install_dev_tools: false
+devtools_formulae:
+  - gh
+  - git
+devtools_casks: []
+
+install_common_cli_tools: false
+common_cli_formulae:
+  - bitwarden-cli
+  - zstd
+common_cli_casks: []
+
+install_aws_tools: false
+aws_formulae:
+  - awscli
+  - s3cmd
+aws_casks: []
+
+install_other_formulae: []
+install_other_casks: []
+remove_other_formulae: []
+remove_other_casks: []

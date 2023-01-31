@@ -36,3 +36,48 @@
       when: vscode
     - import_tasks: tasks/mac-app-store.yml
       when: mac_app_store
+    - name: Manage kube tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: kube
+        install_formulae: "{{ kube_formulae }}"
+        install_casks: "{{ kube_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_kube_apps and ansible_pkg_mgr == "homebrew"
+    - name: Manage dev tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: dev
+        install_formulae: "{{ devtools_formulae }}"
+        install_casks: "{{ devtools_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_dev_tools and ansible_pkg_mgr == "homebrew"
+    - name: Manage common cli tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: common cli
+        install_formulae: "{{ common_cli_formulae }}"
+        install_casks: "{{ common_cli_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_common_cli_tools and ansible_pkg_mgr == "homebrew"
+    - name: Manage aws tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: aws
+        install_formulae: "{{ aws_formulae }}"
+        install_casks: "{{ aws_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_aws_tools and ansible_pkg_mgr == "homebrew"
+    - name: Manage other packages
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: other
+        install_formulae: "{{ install_other_formulae }}"
+        install_casks: "{{ install_other_casks }}"
+        remove_formulae: "{{ remove_other_formulae }}"
+        remove_casks: "{{ remove_other_casks }}"
+      when: ansible_pkg_mgr == "homebrew"

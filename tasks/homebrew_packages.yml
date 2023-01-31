@@ -1,0 +1,23 @@
+- name: "Install {{ name }} homewbrew formulae"
+  community.general.homebrew:
+    name: "{{ install_formulae }}"
+    state: present
+  when: install_formulae
+
+- name: "Install {{ name }} homewbrew casks"
+  community.general.homebrew_cask:
+    name: "{{ install_casks }}"
+    state: present
+  when: install_casks
+
+- name: "Remove {{ name }} homewbrew formulae"
+  community.general.homebrew:
+    name: "{{ remove_formulae }}"
+    state: absent
+  when: remove_formulae
+
+- name: "Remove {{ name }} homewbrew formulae"
+  community.general.homebrew_cask:
+    name: "{{ remove_casks }}"
+    state: absent
+  when: remove_casks
