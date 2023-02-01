@@ -41,3 +41,5 @@ install_other_formulae: []
 install_other_casks: []
 remove_other_formulae: []
 remove_other_casks: []
+
+install_pip_packages: []

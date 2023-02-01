@@ -104,3 +104,8 @@
         remove_formulae: "{{ remove_other_formulae }}"
         remove_casks: "{{ remove_other_casks }}"
       when: ansible_pkg_mgr == "homebrew"
+    - name: Install python packages
+      ansible.builtin.pip:
+        name: "{{ install_pip_packages }}"
+        state: present
+      when: install_pip_packages
