@@ -14,10 +14,10 @@
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
     minute: "*/15"
-    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -o >/dev/null 2>&1"
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -o >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
 
 - name: Ansible-pull reboot cron
   ansible.builtin.cron:
     name: ansible-pull reboot
     special_time: reboot
-    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true >/dev/null 2>&1"
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
