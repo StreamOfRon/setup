@@ -26,7 +26,7 @@
       ansible.builtin.copy:
         src: "{{ lookup('env', 'HOME') }}/.setup/default.config.yml"
         dest: "{{ lookup('env', 'HOME') }}/.setup-options"
-      creates: "{{ lookup('env', 'HOME') }}/.setup-options"
+        creates: "{{ lookup('env', 'HOME') }}/.setup-options"
 
     - name: Include local configuration
       include_vars: "{{ item }}"
