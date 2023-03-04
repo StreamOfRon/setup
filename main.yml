@@ -21,7 +21,7 @@
             path: "{{ lookup('env', 'HOME') }}/.ansible-config"
             state: absent
       when: old_conf.stat.exists
-    
+
     - name: Create local config
       ansible.builtin.copy:
         src: "{{ lookup('env', 'HOME') }}/.setup/default.config.yml"
@@ -53,7 +53,6 @@
           import_tasks: tasks/homebrew_list.yml
           when: ansible_pkg_mgr == "homebrew"
 
-
   tasks:
     - import_tasks: tasks/ansible-pull-cron.yml
       when: setup_ansible_pull
@@ -65,6 +64,46 @@
       when: vscode
     - import_tasks: tasks/mac-app-store.yml
       when: mac_app_store
+    - name: Manage sync tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: sync
+        install_formulae: "{{ sync_formulae }}"
+        install_casks: "{{ sync_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_sync_tools and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
+    - name: Manage misc apps
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: misc
+        install_formulae: "{{ misc_formulae }}"
+        install_casks: "{{ misc_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_misc_apps and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
+    - name: Manage entertainment apps
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: entertainment
+        install_formulae: "{{ entertainment_formulae }}"
+        install_casks: "{{ entertainment_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_entertainment_apps and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
+    - name: Manage media tools
+      import_tasks: tasks/homebrew_packages.yml
+      vars:
+        name: media
+        install_formulae: "{{ media_formulae }}"
+        install_casks: "{{ media_casks }}"
+        remove_formulae: []
+        remove_casks: []
+      when: install_media_tools and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Manage kube tools
       import_tasks: tasks/homebrew_packages.yml
       vars:
@@ -74,6 +113,7 @@
         remove_formulae: []
         remove_casks: []
       when: install_kube_apps and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Manage dev tools
       import_tasks: tasks/homebrew_packages.yml
       vars:
@@ -83,6 +123,7 @@
         remove_formulae: []
         remove_casks: []
       when: install_dev_tools and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Manage common cli tools
       import_tasks: tasks/homebrew_packages.yml
       vars:
@@ -92,6 +133,7 @@
         remove_formulae: []
         remove_casks: []
       when: install_common_cli_tools and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Manage aws tools
       import_tasks: tasks/homebrew_packages.yml
       vars:
@@ -101,6 +143,7 @@
         remove_formulae: []
         remove_casks: []
       when: install_aws_tools and ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Manage other packages
       import_tasks: tasks/homebrew_packages.yml
       vars:
@@ -110,8 +153,10 @@
         remove_formulae: "{{ remove_other_formulae }}"
         remove_casks: "{{ remove_other_casks }}"
       when: ansible_pkg_mgr == "homebrew"
+      ignore_errors: true
     - name: Install python packages
       ansible.builtin.pip:
         name: "{{ install_pip_packages }}"
         state: present
       when: install_pip_packages
+      ignore_errors: true
