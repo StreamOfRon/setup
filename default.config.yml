@@ -13,10 +13,10 @@ install_mas_apps:
 remove_mas_apps: []
 
 install_sync_tools: false
-sync_formulae:
-  - syncthing
+sync_formulae: []
 sync_casks:
   - nextcloud
+  - syncthing
 
 install_misc_apps: false
 misc_formulae: []
