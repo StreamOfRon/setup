@@ -22,6 +22,7 @@ install_misc_apps: false
 misc_formulae: []
 misc_casks:
   - iterm2
+  - the-unarchiver
 
 install_entertainment_apps: false
 entertainment_formulae: []
