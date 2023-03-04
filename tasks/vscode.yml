@@ -16,7 +16,7 @@
 
 - name: Ensure VSCode config path exists (Mac)
   ansible.builtin.file:
-    path: {{ lookup('env', 'HOME') }}/Library/Application Support/Code/User
+    path: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User"
     state: directory
   when: ansible_system == "Darwin"
 
@@ -28,7 +28,7 @@
 
 - name: Ensure VSCode config path exists (Linux)
   ansible.builtin.file:
-    path: {{ lookup('env', 'HOME') }}/.config/Code/User
+    path: "{{ lookup('env', 'HOME') }}/.config/Code/User"
     state: directory
   when: ansible_system == "Linux"
 
