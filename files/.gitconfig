@@ -1,5 +1,7 @@
+[core]
+	excludesFile = ~/.gitignore
 [pull]
-	ff = only
+	ff = true
 [push]
 	default = simple
 	autoSetupRemote = true
