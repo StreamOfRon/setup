@@ -14,6 +14,8 @@ install_kube_apps: false
 kube_formulae:
   - argocd
   - kubernetes-cli
+  - derailed/k9s/k9s
+  - kubectx
 kube_casks:
   - openlens
   - podman-desktop
