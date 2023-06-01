@@ -1,14 +1,40 @@
+setup_ansible_pull: true
 dotfiles: true
+oh_my_zsh: false
+vscode: false
+
 install_apple_office: false
 install_garageband: false
 install_imovie: false
 mac_app_store: false
-oh_my_zsh: false
-setup_ansible_pull: true
-vscode: false
 
-install_mas_apps: []
+install_mas_apps:
+  - 1352778147 # Bitwarden
 remove_mas_apps: []
+
+install_sync_tools: false
+sync_formulae: []
+sync_casks:
+  - nextcloud
+  - syncthing
+
+install_misc_apps: false
+misc_formulae: []
+misc_casks:
+  - iterm2
+  - the-unarchiver
+
+install_entertainment_apps: false
+entertainment_formulae: []
+entertainment_casks:
+  - spotify
+  - vlc
+
+install_media_tools: false
+media_formulae: []
+media_casks:
+  - handbrake
+  - makemkv
 
 install_kube_apps: false
 kube_formulae:
