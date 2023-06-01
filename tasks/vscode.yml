@@ -14,11 +14,23 @@
     - ansible_pkg_mgr == "homebrew"
     - "['visual-studio-code'] | difference(installed_brew_casks.stdout) | length > 0"
 
+- name: Ensure VSCode config path exists (Mac)
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User"
+    state: directory
+  when: ansible_system == "Darwin"
+
 - name: Install VSCode Config (Mac)
   ansible.builtin.copy:
     src: files/vscode-settings.json
     dest: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User/settings.json"
   when: ansible_system == "Darwin"
+
+- name: Ensure VSCode config path exists (Linux)
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/Code/User"
+    state: directory
+  when: ansible_system == "Linux"
 
 - name: Install VSCode Config (Linux)
   ansible.builtin.copy:
