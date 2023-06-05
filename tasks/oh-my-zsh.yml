@@ -22,6 +22,7 @@
         name:
           - font-meslo-for-powerline
       when: "['font-meslo-for-powerline'] | difference(installed_brew_casks.stdout) | length > 0"
+      ignore_errors: true
     - name: Install powerlevel10k
       community.general.homebrew:
         name:
