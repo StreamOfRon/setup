@@ -5,3 +5,6 @@
 [push]
 	default = simple
 	autoSetupRemote = true
+[pager]
+	branch = false
+	
