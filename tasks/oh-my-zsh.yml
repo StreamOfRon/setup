@@ -37,10 +37,6 @@
       ansible.builtin.shell:
         cmd: "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git {{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
         creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
-    - name: .zshrc
-      ansible.builtin.copy:
-        src: files/zshrc
-        dest: "{{ lookup('env', 'HOME') }}/.zshrc"
   when: ansible_pkg_mgr != "homebrew"
 
 - name: .zshrc
