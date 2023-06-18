@@ -53,7 +53,7 @@ case "${OS}" in
   ;;
 
 *)
-  echo "Unknownx OS environment: ${OS}"
+  echo "Unknown OS environment: ${OS}"
   exit 1
   ;;
 esac
