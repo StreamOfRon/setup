@@ -7,17 +7,10 @@
     - files/.zprofile
     - files/.gitignore
 
-- name: Copy homebrew zprofile
-  ansible.builtin.copy:
-    src: files/.zprofile.homebrew
+- name: .zprofile
+  ansible.builtin.template:
+    src: templates/zprofile.j2
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
-  when: ansible_pkg_mgr == "homebrew"
-
-- name: Copy non-homebrew zprofile
-  ansible.builtin.copy:
-    src: files/.zprofile
-    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
-  when: ansible_pkg_mgr != "homebrew"
 
 - name: Make .gitconfig
   ansible.builtin.file:
