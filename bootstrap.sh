@@ -8,7 +8,7 @@ if [[ ! -x $BREW || $? -eq 1 ]] ; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   if [ -x /usr/local/bin/brew ] ; then
     BREW="/usr/local/bin/brew"
-  else if [ -x /opt/homebrew/bin/brew ] ; then
+  elif [ -x /opt/homebrew/bin/brew ] ; then
     BREW="/opt/homebrew/bin/brew"
   else
     echo "Still can't find homebrew, aborting..."
