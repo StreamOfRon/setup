@@ -39,14 +39,6 @@
           community.general.homebrew:
             update_homebrew: true
           when: ansible_pkg_mgr == "homebrew"
-        - name: Update apt packages
-          ansible.builtin.apt:
-            update_cache: true
-          when: ansible_pkg_mgr == "apt"
-        - name: Update pacman packages
-          community.general.pacman:
-            update_cache: true
-          when: ansible_pkg_mgr == "pacman"
     - name: Get list of installed packages
       block:
         - name: Get installed homebew packages
