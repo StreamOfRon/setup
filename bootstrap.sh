@@ -33,8 +33,8 @@ case "${OS}" in
     if $? == 0 ; then
       case "${name}" in
       "apt")
-        $PKGMGR update
-        $PKGMGR install ansible flock
+        sudo $PKGMGR update
+        sudo $PKGMGR install ansible
         ;;
 
       "pamac")
