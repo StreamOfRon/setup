@@ -29,12 +29,25 @@
           - powerlevel10k
         state: present
       when: "['powerlevel10k'] | difference(installed_brew_formulae.stdout) | length > 0"
+    - name: .zshrc
+      ansible.builtin.copy:
+        dest: "{{ lookup('env', 'HOME') }}/"
+        src: files/zshrc.homebrew
+        dest: "{{ lookup('env', 'HOME') }}/.zshrc"
   when: ansible_pkg_mgr == "homebrew"
 
-- name: .zshrc
-  ansible.builtin.copy:
-    src: files/zshrc
-    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+- name: Install powerlevel10k theme from git
+  block:
+    - name: Pull powerlevel10k theme
+      ansible.builtin.shell:
+        cmd: "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git {{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    - name: .zshrc
+      ansible.builtin.copy:
+        dest: "{{ lookup('env', 'HOME') }}/"
+        src: files/zshrc
+        dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+  when: ansible_pkg_mgr != "homebrew"
 
 - name: .p10k.zsh
   ansible.builtin.copy:
