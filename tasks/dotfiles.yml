@@ -4,7 +4,6 @@
     dest: "{{ lookup('env', 'HOME') }}/"
   loop:
     - files/.vimrc
-    - files/.zprofile
     - files/.gitignore
 
 - name: .zprofile
