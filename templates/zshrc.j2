@@ -18,7 +18,9 @@ source $(brew --prefix)/opt/powerlevel10k/powerlevel10k.zsh-theme
 source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
 {% endif %}
 
+# Set it here, so it can be overridden in zshrc.local
+export EDITOR='vim'
+
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 [[ ! -f ~/.zshrc.local ]] || source ~/.zshrc.local
 
-export EDITOR='vim'
