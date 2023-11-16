@@ -11,12 +11,13 @@
     src: templates/zprofile.j2
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
 
-- name: Make .gitconfig
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.gitconfig"
-    state: touch
+#- name: Make .gitconfig
+#  ansible.builtin.file:
+#    path: "{{ lookup('env', 'HOME') }}/.gitconfig"
+#    state: touch
 
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
     block: "{{ lookup('ansible.builtin.file', 'files/.gitconfig') }}"
+    create: true

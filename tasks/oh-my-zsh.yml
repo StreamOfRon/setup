@@ -39,6 +39,46 @@
         creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
   when: ansible_pkg_mgr != "homebrew"
 
+- name: Install Meslo nerd fonts
+  block:
+    - name: Ensure local fonts dir exists
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
+        state: directory
+    - ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Regular.ttf"
+      register: regular
+    - name: "Regular"
+      ansible.builtin.get_url:
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf"
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Regular.ttf"
+      when: not regular.stat.exists
+    - ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold.ttf"
+      register: bold
+    - name: "Bold"
+      ansible.builtin.get_url:
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf"
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold.ttf"
+      when: not bold.stat.exists
+    - ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Italic.ttf"
+      register: italic
+    - name: "Italic"
+      ansible.builtin.get_url:
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf"
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Italic.ttf"
+      when: not italic.stat.exists
+    - ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold Italic.ttf"
+      register: bold_italic
+    - name: "Bold Italic"
+      ansible.builtin.get_url:
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf"
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold Italic.ttf"
+      when: not bold_italic.stat.exists
+  when: ansible_pkg_mgr != "homebrew"
+
 - name: .zshrc
   ansible.builtin.template:
     src: templates/zshrc.j2
