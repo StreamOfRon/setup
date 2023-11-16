@@ -6,15 +6,10 @@
     - files/.vimrc
     - files/.gitignore
 
-- name: .zprofile
+- name: .zshrc
   ansible.builtin.template:
-    src: templates/zprofile.j2
-    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
-
-#- name: Make .gitconfig
-#  ansible.builtin.file:
-#    path: "{{ lookup('env', 'HOME') }}/.gitconfig"
-#    state: touch
+    src: templates/zshrc.j2
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
 
 - name: .gitconfig
   ansible.builtin.blockinfile:

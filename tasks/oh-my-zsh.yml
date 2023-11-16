@@ -79,10 +79,10 @@
       when: not bold_italic.stat.exists
   when: ansible_pkg_mgr != "homebrew"
 
-- name: .zshrc
+- name: .zshrc.omz
   ansible.builtin.template:
-    src: templates/zshrc.j2
-    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+    src: templates/zshrc.omz.j2
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc.omz"
 
 - name: .p10k.zsh
   ansible.builtin.copy:
