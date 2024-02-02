@@ -32,7 +32,8 @@
         state: present
       vars:
         items:
-           - powerlevel10k
+          - autoenv
+          - powerlevel10k
       when: "items | difference(installed_brew_formulae.stdout) | length > 0"
   when: ansible_pkg_mgr == "homebrew"
 

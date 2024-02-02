@@ -42,6 +42,7 @@ kube_formulae:
   - kubernetes-cli
   - derailed/k9s/k9s
   - kubectx
+  - podman-compose
 kube_casks:
   - openlens
   - podman-desktop
