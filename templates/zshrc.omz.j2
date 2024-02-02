@@ -14,11 +14,11 @@ zstyle ':omz:update' frequency 1
 plugins=(autoupdate git)
 source $ZSH/oh-my-zsh.sh
 {% if ansible_pkg_mgr == "homebrew" %}
-source $(brew --prefix)/opt/powerlevel10k/powerlevel10k.zsh-theme
+BREW_PREFIX=$(brew --prefix)
+[[ ! -f $BREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme ]] || source $BREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme
+[[ ! -f $BREW_PREFIX/opt/powerlevel10k/powerlevel10k.zsh-theme ]] || source $BREW_PREFIX/opt/powerlevel10k/powerlevel10k.zsh-theme
 {% else %}
 source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
 {% endif %}
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-
