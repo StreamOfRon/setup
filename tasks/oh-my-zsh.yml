@@ -10,25 +10,30 @@
 
 - name: Install powerlevel10k theme and font with homebrew
   block:
-    - name: Tap repos for p10k
+    - name: Tap repos for fonts
       community.general.homebrew_tap:
-        name:
-          - romkatv/powerlevel10k
-          - homebrew/cask-fonts
+        name: "{{ items }}"
         state: present
-      when: "['romkatv/powerlevel10k', 'homebrew/cask-fonts'] | difference(brew_taps.stdout) | length > 0"
+      vars:
+        items:
+          - 'homebrew/cask-fonts'
+      when: "items | difference(brew_taps.stdout) | length > 0"
     - name: Install meslo fonts
       community.general.homebrew_cask:
-        name:
+        name: "{{ items }}"
+      vars:
+        items:
           - font-meslo-for-powerline
-      when: "['font-meslo-for-powerline'] | difference(installed_brew_casks.stdout) | length > 0"
+      when: "items | difference(installed_brew_casks.stdout) | length > 0"
       ignore_errors: true
     - name: Install powerlevel10k
       community.general.homebrew:
-        name:
-          - powerlevel10k
+        name: "{{ items }}"
         state: present
-      when: "['powerlevel10k'] | difference(installed_brew_formulae.stdout) | length > 0"
+      vars:
+        items:
+           - powerlevel10k
+      when: "items | difference(installed_brew_formulae.stdout) | length > 0"
   when: ansible_pkg_mgr == "homebrew"
 
 - name: Install powerlevel10k theme from git
