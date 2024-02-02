@@ -11,7 +11,7 @@ export UPDATE_ZSH_DAYS=1
 zstyle ':omz:update' mode auto
 zstyle ':omz:update' frequency 1
 
-plugins=(autoupdate git)
+plugins=(autoenv autoupdate gh git git-auto-fetch git-commit macos)
 source $ZSH/oh-my-zsh.sh
 {% if ansible_pkg_mgr == "homebrew" %}
 BREW_PREFIX=$(brew --prefix)
@@ -22,3 +22,5 @@ source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
 {% endif %}
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+export AUTOENV_ENABLE_LEAVE=true
