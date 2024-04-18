@@ -5,23 +5,6 @@
     - default.config.yml
 
   pre_tasks:
-    - name: Check old options
-      ansible.builtin.stat:
-        path: "{{ lookup('env', 'HOME') }}/.ansible-config"
-      register: old_conf
-
-    - name: Move old options file to new name
-      block:
-        - name: Copy to new name
-          ansible.builtin.copy:
-            src: "{{ lookup('env', 'HOME') }}/.ansible-config"
-            dest: "{{ lookup('env', 'HOME') }}/.setup-options"
-        - name: Remove old file
-          ansible.builtin.file:
-            path: "{{ lookup('env', 'HOME') }}/.ansible-config"
-            state: absent
-      when: old_conf.stat.exists
-
     - name: Create local config
       ansible.builtin.copy:
         src: "{{ lookup('env', 'HOME') }}/.setup/default.config.yml"
