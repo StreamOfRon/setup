@@ -30,7 +30,7 @@ case "${OS}" in
   PKGMGR=""
   for name in $SUPPORTED ; do
     PKGMGR=$(which ${name})
-    if $? == 0 ; then
+    if [[ $? == 0 ]] ; then
       case "${name}" in
       "apt")
         sudo $PKGMGR update
