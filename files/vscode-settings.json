@@ -3,7 +3,7 @@
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
   "files.trimTrailingWhitespace": true,
-  "editor.tabSize": 2,
+  "editor.tabSize": 4,
   "workbench.editorAssociations": {
       "*.ipynb": "jupyter.notebook.ipynb"
   },
