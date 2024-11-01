@@ -13,20 +13,12 @@
 - name: Install powerlevel10k theme and font with homebrew
   when: ansible_pkg_mgr == "homebrew"
   block:
-    - name: Tap repos for fonts
-      community.general.homebrew_tap:
-        name: "{{ items }}"
-        state: present
-      vars:
-        items:
-          - 'homebrew/cask-fonts'
-      when: "items | difference(brew_taps.stdout) | length > 0"
     - name: Install meslo fonts
       community.general.homebrew_cask:
         name: "{{ items }}"
       vars:
         items:
-          - font-meslo-for-powerline
+          - font-meslo-for-powerlevel10k
       when: "items | difference(installed_brew_casks.stdout) | length > 0"
       ignore_errors: true
     - name: Install powerlevel10k
