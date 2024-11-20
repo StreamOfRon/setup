@@ -1,6 +1,6 @@
 setup_ansible_pull: true
 dotfiles: true
-oh_my_zsh: false
+oh_my_zsh: true
 vscode: false
 
 install_apple_office: false
