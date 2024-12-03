@@ -2,11 +2,6 @@ export PATH="/usr/local/sbin:$PATH"
 export PATH="/usr/local/opt/mysql-client/bin:$PATH"
 export PATH="$PATH:$HOME/bin:$HOME/go/bin"
 
-{% if ansible_pkg_mgr == "homebrew" %}
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
-eval "$($(brew --prefix)/bin/brew shellenv)"
-{% endif %}
-
 [[ ! -f ~/.zshrc.omz ]] || source ~/.zshrc.omz
 
 # Set it here, so it can be overridden in zshrc.local
