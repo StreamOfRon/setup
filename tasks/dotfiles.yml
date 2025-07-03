@@ -16,3 +16,9 @@
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
     block: "{{ lookup('ansible.builtin.file', 'files/.gitconfig') }}"
     create: true
+
+- name: .ssh/config
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    block: "{{ lookup('ansible.builtin.file', 'files/ssh_config') }}"
+    create: true

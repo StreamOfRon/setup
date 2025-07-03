@@ -8,3 +8,10 @@
 [pager]
 	branch = false
 	diff = false
+[credential "https://github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[credential]
+	helper = /usr/local/bin/git-credential-manager
+	credentialStore = secretservice
