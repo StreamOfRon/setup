@@ -1,31 +1,31 @@
-- name: "Install {{ name }} homewbrew formulae"
+- name: "Install {{ groupname }} homewbrew formulae"
   community.general.homebrew:
     name: "{{ install_formulae }}"
     state: present
   when:
-    - install_formulae
+    - install_formulae | length > 0
     - install_formulae | difference(installed_brew_formulae.stdout) | length > 0
 
-- name: "Install {{ name }} homewbrew casks"
+- name: "Install {{ groupname }} homewbrew casks"
   community.general.homebrew_cask:
     name: "{{ install_casks }}"
     state: present
   when:
-    - install_casks
+    - install_casks | length > 0
     - install_casks | difference(installed_brew_casks.stdout) | length > 0
 
-- name: "Remove {{ name }} homewbrew formulae"
+- name: "Remove {{ groupname }} homewbrew formulae"
   community.general.homebrew:
     name: "{{ remove_formulae }}"
     state: absent
   when:
-    - remove_formulae
+    - remove_formulae | length > 0
     - remove_formulae | intersect(installed_brew_formulae.stdout) | length > 0
 
-- name: "Remove {{ name }} homewbrew formulae"
+- name: "Remove {{ groupname }} homewbrew formulae"
   community.general.homebrew_cask:
     name: "{{ remove_casks }}"
     state: absent
   when:
-     - remove_casks
+     - remove_casks | length > 0
      - remove_casks | intersect(installed_brew_casks.stdout) | length > 0

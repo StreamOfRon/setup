@@ -38,3 +38,13 @@
     src: files/vscode-settings.json
     dest: "{{ lookup('env', 'HOME') }}/.config/Code/User/settings.json"
   when: ansible_system == "Linux"
+
+- name: Ensure continue.dev config path exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.continue"
+    state: directory
+
+- name: Install continue.dev configuration
+  ansible.builtin.copy:
+    src: files/continue-config.yaml
+    dest: "{{ lookup('env', 'HOME') }}/.continue/config.yaml"

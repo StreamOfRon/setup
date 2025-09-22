@@ -11,10 +11,18 @@
     src: templates/zshrc.j2
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
 
+- name: Find full path to git-credential-manager
+  ansible.builtin.command:
+    cmd: command -v git-credential-manager
+  register: gcm_path
+  changed_when: false
+  failed_when: gcm_path.rc != 0
+  when: ansible_os_family != 'Windows'
+
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
-    block: "{{ lookup('ansible.builtin.file', 'files/.gitconfig') }}"
+    block: "{{ lookup('ansible.builtin.template', 'templates/.gitconfig.j2') }}"
     create: true
 
 - name: .ssh/config
