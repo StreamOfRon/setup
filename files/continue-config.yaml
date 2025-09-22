@@ -1,0 +1,67 @@
+name: Local Assistant
+version: 1.0.0
+schema: v1
+models:
+  - name: gpt-oss
+    provider: openai
+    apiBase: https://llama-swap.ext.cshome.link/v1
+    apiKey: ${{ secrets.LLAMASWAP_KEY }}
+    model: gpt-oss-20b
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+    requestOptions:
+      timeout: 3000
+
+  - name: Llama-Swap
+    provider: openai
+    apiBase: https://llama-swap.ext.cshome.link/v1
+    apiKey: ${{ secrets.LLAMASWAP_KEY }}
+    model: AUTODETECT
+    defaultCompletionOptions:
+      contextLength: 65536
+      maxTokens: 1024
+    roles:
+      - chat
+      - edit
+      - apply
+      - autocomplete
+    requestOptions:
+      timeout: 3000
+    autocompleteOptions:
+      disable: false
+      maxPromptTokens: 1024
+      debounceDelay: 500
+      modelTimeout: 500
+      maxSuffixPercentage: 0.2
+      prefixPercentage: 0.3
+      onlyMyCode: false
+      useCache: true
+      useImports: true
+      useRecentlyEdited: true
+      useRecentlyOpened: true
+
+context:
+  - provider: file
+  - provider: code
+  - provider: diff
+  - provider: currentFile
+  - provider: terminal
+  - provider: open
+  - provider: tree
+  - provider: problems
+
+mcpServers:
+  - name: Context7 MCP
+    type: streamable-http
+    url: https://mcp.context7.com/mcp
+  - name: DeepWiki MCP
+    type: streamable-http
+    url: https://mcp.deepwiki.com/mcp
+  - name: Browser search
+    command: npx
+    args:
+      - "@playwright/mcp@latest"

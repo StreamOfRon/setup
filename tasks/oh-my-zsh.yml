@@ -3,12 +3,18 @@
     cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
     creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
 
+- name: Ensure the target directory does not exist before cloning
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/plugins/autoupdate"
+  register: repo_dir
+
 - name: Install OMZ auto-update plugin
   ansible.builtin.git:
     repo: https://github.com/TamCore/autoupdate-oh-my-zsh-plugins.git
     dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/plugins/autoupdate"
     depth: 1
     single_branch: true
+  when: not repo_dir.stat.exists
 
 - name: Install powerlevel10k theme and font with homebrew
   when: ansible_pkg_mgr == "homebrew"

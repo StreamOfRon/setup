@@ -52,6 +52,7 @@ devtools_formulae:
   - ansible-lint
   - gh
   - git
+  - git-credential-manager
 devtools_casks: []
 
 install_common_cli_tools: false
@@ -70,5 +71,3 @@ install_other_formulae: []
 install_other_casks: []
 remove_other_formulae: []
 remove_other_casks: []
-
-install_pip_packages: []
