@@ -9,9 +9,9 @@
 	branch = false
 	diff = false
 [credential "https://github.com"]
-	helper = !/usr/bin/gh auth git-credential
+	helper = !{{ gh_path.stdout }} auth git-credential
 [credential "https://gist.github.com"]
-	helper = !/usr/bin/gh auth git-credential
+	helper = !{{ gh_path.stdout }} auth git-credential
 [credential]
 {% if ansible_os_family == 'Windows'%}
 	helper = manager
