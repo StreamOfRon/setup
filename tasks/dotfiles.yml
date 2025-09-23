@@ -19,6 +19,14 @@
   failed_when: gcm_path.rc != 0
   when: ansible_os_family != 'Windows'
 
+- name: Find full path to github cli
+  ansible.builtin.command:
+    cmd: which gh
+  register: gh_path
+  changed_when: false
+  failed_when: gh_path.rc != 0
+  when: ansible_os_family != 'Windows'
+
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
