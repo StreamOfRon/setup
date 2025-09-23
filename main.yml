@@ -5,16 +5,15 @@
     - default.config.yml
 
   pre_tasks:
-    - name: Create local config
-      ansible.builtin.copy:
-        src: "{{ lookup('env', 'HOME') }}/.setup/default.config.yml"
-        dest: "{{ lookup('env', 'HOME') }}/.setup-options"
-        force: false
+    - name: Check for local options file
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.setup-options"
+      register: local_options_file
 
     - name: Include local configuration
-      include_vars: "{{ item }}"
-      loop:
-        - "{{ lookup('env', 'HOME') }}/.setup-options"
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'HOME') }}/.setup-options"
+      when: local_options_file.stat.exists
 
     - name: Update package managers
       block:
@@ -22,25 +21,26 @@
           community.general.homebrew:
             update_homebrew: true
           when: ansible_pkg_mgr == "homebrew"
+
     - name: Get list of installed packages
       block:
         - name: Get installed homebew packages
-          import_tasks: tasks/homebrew_list.yml
+          ansible.builtin.import_tasks: tasks/homebrew_list.yml
           when: ansible_pkg_mgr == "homebrew"
 
   tasks:
-    - import_tasks: tasks/ansible-pull-cron.yml
+    - ansible.builtin.import_tasks: tasks/ansible-pull-cron.yml
       when: setup_ansible_pull
-    - import_tasks: tasks/dotfiles.yml
+    - ansible.builtin.import_tasks: tasks/dotfiles.yml
       when: dotfiles
-    - import_tasks: tasks/oh-my-zsh.yml
+    - ansible.builtin.import_tasks: tasks/oh-my-zsh.yml
       when: oh_my_zsh
-    - import_tasks: tasks/vscode.yml
+    - ansible.builtin.import_tasks: tasks/vscode.yml
       when: vscode
-    - import_tasks: tasks/mac-app-store.yml
+    - ansible.builtin.import_tasks: tasks/mac-app-store.yml
       when: mac_app_store
     - name: Manage sync tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: sync
         install_formulae: "{{ sync_formulae }}"
@@ -50,7 +50,7 @@
       when: install_sync_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage misc apps
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: misc
         install_formulae: "{{ misc_formulae }}"
@@ -60,7 +60,7 @@
       when: install_misc_apps and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage entertainment apps
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: entertainment
         install_formulae: "{{ entertainment_formulae }}"
@@ -70,7 +70,7 @@
       when: install_entertainment_apps and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage media tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: media
         install_formulae: "{{ media_formulae }}"
@@ -80,7 +80,7 @@
       when: install_media_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage kube tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: kube
         install_formulae: "{{ kube_formulae }}"
@@ -90,7 +90,7 @@
       when: install_kube_apps and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage dev tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: dev
         install_formulae: "{{ devtools_formulae }}"
@@ -100,7 +100,7 @@
       when: install_dev_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage common cli tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: common cli
         install_formulae: "{{ common_cli_formulae }}"
@@ -110,7 +110,7 @@
       when: install_common_cli_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage aws tools
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: aws
         install_formulae: "{{ aws_formulae }}"
@@ -120,7 +120,7 @@
       when: install_aws_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage other packages
-      import_tasks: tasks/homebrew_packages.yml
+      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: other
         install_formulae: "{{ install_other_formulae }}"
