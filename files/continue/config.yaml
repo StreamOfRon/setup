@@ -73,7 +73,7 @@ mcpServers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-filesystem"
-      - "${{ inputs.PATH }}"
+      - "${workspaceFolder}"
   - name: Browser search
     command: npx
     args:
