@@ -4,8 +4,8 @@ schema: v1
 models:
   - name: gpt-oss
     provider: openai
-    apiBase: https://llama-swap.ext.cshome.link/v1
-    apiKey: ${{ secrets.LLAMASWAP_KEY }}
+    apiBase: ${{ secrets.LOCALLLAMA_URI }}
+    apiKey: ${{ secrets.LOCALLLAMA_KEY }}
     model: gpt-oss-20b
     roles:
       - chat
@@ -17,8 +17,8 @@ models:
 
   - name: Llama-Swap
     provider: openai
-    apiBase: https://llama-swap.ext.cshome.link/v1
-    apiKey: ${{ secrets.LLAMASWAP_KEY }}
+    apiBase: ${{ secrets.LOCALLLAMA_URI }}
+    apiKey: ${{ secrets.LOCALLLAMA_KEY }}
     model: AUTODETECT
     defaultCompletionOptions:
       contextLength: 65536
