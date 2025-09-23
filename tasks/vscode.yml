@@ -46,5 +46,5 @@
 
 - name: Install continue.dev configuration
   ansible.builtin.copy:
-    src: files/continue-config.yaml
-    dest: "{{ lookup('env', 'HOME') }}/.continue/config.yaml"
+    src: files/continue/
+    dest: "{{ lookup('env', 'HOME') }}/.continue/"

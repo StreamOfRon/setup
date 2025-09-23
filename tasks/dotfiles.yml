@@ -13,7 +13,7 @@
 
 - name: Find full path to git-credential-manager
   ansible.builtin.command:
-    cmd: command -v git-credential-manager
+    cmd: which git-credential-manager
   register: gcm_path
   changed_when: false
   failed_when: gcm_path.rc != 0
