@@ -11,3 +11,4 @@ description: Documentation resources
 - Ansible: https://docs.ansible.com/
 - Tilt: https://docs.tilt.dev/
 - PEP8: https://peps.python.org/pep-0008/
+- KEDA: https://keda.sh/docs/
