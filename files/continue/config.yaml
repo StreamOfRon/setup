@@ -10,7 +10,6 @@ models:
     roles:
       - chat
       - edit
-      - apply
     capabilities:
       - tool_use
     requestOptions:
@@ -27,7 +26,6 @@ models:
     roles:
       - chat
       - edit
-      - apply
       - autocomplete
     requestOptions:
       timeout: 3000
@@ -53,6 +51,7 @@ context:
   - provider: open
   - provider: tree
   - provider: problems
+  - provider: codebase
 
 mcpServers:
   - name: Context7 MCP
@@ -61,6 +60,20 @@ mcpServers:
   - name: DeepWiki MCP
     type: streamable-http
     url: https://mcp.deepwiki.com/mcp
+  - name: Semgrep MCP
+    type: streamable-http
+    url: https://mcp.semgrep.ai/mcp
+  - name: Memory
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-memory"
+  - name: Filesystem
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "${{ inputs.PATH }}"
   - name: Browser search
     command: npx
     args:
