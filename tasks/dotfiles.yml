@@ -16,16 +16,16 @@
     cmd: which git-credential-manager
   register: gcm_path
   changed_when: false
-  failed_when: gcm_path.rc != 0
   when: ansible_os_family != 'Windows'
+  ignore_errors: true
 
 - name: Find full path to github cli
   ansible.builtin.command:
     cmd: which gh
   register: gh_path
   changed_when: false
-  failed_when: gh_path.rc != 0
   when: ansible_os_family != 'Windows'
+  ignore_errors: true
 
 - name: .gitconfig
   ansible.builtin.blockinfile:

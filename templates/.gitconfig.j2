@@ -8,16 +8,20 @@
 [pager]
 	branch = false
 	diff = false
+{% if gh_path.rc == 0 %}
 [credential "https://github.com"]
 	helper = !{{ gh_path.stdout }} auth git-credential
 [credential "https://gist.github.com"]
 	helper = !{{ gh_path.stdout }} auth git-credential
+{% endif %}
 [credential]
 {% if ansible_os_family == 'Windows'%}
 	helper = manager
 	credentialStore = wincredman
 {% else %}
+{% if gcm_path.rc == 0 %}
 	helper = {{ gcm_path.stdout }}
+{% endif %}
 {% if ansible_os_family == 'Darwin' %}
 	credentialStore = keychain
 {% else %}
