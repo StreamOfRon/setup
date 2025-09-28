@@ -42,90 +42,90 @@
     - name: Manage sync tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_sync_tools | default(false) }}"
         groupname: sync
-        install_formulae: "{{ sync_formulae }}"
-        install_casks: "{{ sync_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_sync_tools and ansible_pkg_mgr == "homebrew"
+        formulae: "{{ sync_formulae }}"
+        casks: "{{ sync_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage misc apps
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_misc_apps | default(false) }}"
         groupname: misc
-        install_formulae: "{{ misc_formulae }}"
-        install_casks: "{{ misc_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_misc_apps and ansible_pkg_mgr == "homebrew"
+        formulae: "{{ misc_formulae }}"
+        casks: "{{ misc_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage entertainment apps
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_entertainment_apps | default(false) }}"
         groupname: entertainment
-        install_formulae: "{{ entertainment_formulae }}"
-        install_casks: "{{ entertainment_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_entertainment_apps and ansible_pkg_mgr == "homebrew"
+        formuale: "{{ entertainment_formulae }}"
+        casks: "{{ entertainment_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage media tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_media_tools | default(false) }}"
         groupname: media
-        install_formulae: "{{ media_formulae }}"
-        install_casks: "{{ media_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_media_tools and ansible_pkg_mgr == "homebrew"
+        formulae: "{{ media_formulae }}"
+        casks: "{{ media_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage kube tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_kube_apps | default(false) }}"
         groupname: kube
-        install_formulae: "{{ kube_formulae }}"
-        install_casks: "{{ kube_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_kube_apps and ansible_pkg_mgr == "homebrew"
+        formulae: "{{ kube_formulae }}"
+        casks: "{{ kube_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage dev tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_dev_tools | default(false) }}"
         groupname: dev
-        install_formulae: "{{ devtools_formulae }}"
-        install_casks: "{{ devtools_casks }}"
-        remove_formulae: []
-        remove_casks: []
-      when: install_dev_tools and ansible_pkg_mgr == "homebrew"
+        formulae: "{{ devtools_formulae }}"
+        casks: "{{ devtools_casks }}"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+      
     - name: Manage common cli tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: common cli
-        install_formulae: "{{ common_cli_formulae }}"
-        install_casks: "{{ common_cli_casks }}"
-        remove_formulae: []
-        remove_casks: []
+        formulae: "{{ common_cli_formulae }}"
+        casks: "{{ common_cli_casks }}"
       when: install_common_cli_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage aws tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: aws
-        install_formulae: "{{ aws_formulae }}"
-        install_casks: "{{ aws_casks }}"
-        remove_formulae: []
-        remove_casks: []
+        formulae: "{{ aws_formulae }}"
+        casks: "{{ aws_casks }}"
       when: install_aws_tools and ansible_pkg_mgr == "homebrew"
       ignore_errors: true
     - name: Manage other packages
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
         groupname: other
-        install_formulae: "{{ install_other_formulae }}"
-        install_casks: "{{ install_other_casks }}"
-        remove_formulae: "{{ remove_other_formulae }}"
-        remove_casks: "{{ remove_other_casks }}"
+        formulae: "{{ install_other_formulae }}"
+        casks: "{{ install_other_casks }}"
       when: ansible_pkg_mgr == "homebrew"
       ignore_errors: true

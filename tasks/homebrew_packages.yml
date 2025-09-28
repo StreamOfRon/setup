@@ -1,31 +1,22 @@
-- name: "Install {{ groupname }} homewbrew formulae"
+- name: '{{ enabled | ternary("Install", "Remove") }} homebrew formulae for {{ groupname }}'
   community.general.homebrew:
-    name: "{{ install_formulae }}"
-    state: present
+    name: "{{ formulae }}"
+    state: '{{ enabled | ternary("latest", "absent") }}'
   when:
-    - install_formulae | length > 0
-    - install_formulae | difference(installed_brew_formulae.stdout) | length > 0
+    - formulae | length > 0
+    - formulae | difference(installed_brew_formulae.stdout_lines) | length > 0 or
+      formulae | intersect(installed_brew_formulae.stdout_lines) | length > 0
+    - enabled != "ignore"
 
-- name: "Install {{ groupname }} homewbrew casks"
+- name: '{{ enabled | ternary("Install", "Remove") }} homebrew casks for {{ groupname }}'
   community.general.homebrew_cask:
-    name: "{{ install_casks }}"
-    state: present
+    name: "{{ casks }}"
+    state: '{{ enabled | ternary("present", "absent") }}'
+    sudo_password: "{{ ansible_become_password | default() }}"
+    install_options:
+      - "force"
   when:
-    - install_casks | length > 0
-    - install_casks | difference(installed_brew_casks.stdout) | length > 0
-
-- name: "Remove {{ groupname }} homewbrew formulae"
-  community.general.homebrew:
-    name: "{{ remove_formulae }}"
-    state: absent
-  when:
-    - remove_formulae | length > 0
-    - remove_formulae | intersect(installed_brew_formulae.stdout) | length > 0
-
-- name: "Remove {{ groupname }} homewbrew formulae"
-  community.general.homebrew_cask:
-    name: "{{ remove_casks }}"
-    state: absent
-  when:
-     - remove_casks | length > 0
-     - remove_casks | intersect(installed_brew_casks.stdout) | length > 0
+    - casks | length > 0
+    - casks | difference(installed_brew_casks.stdout_lines) | length > 0 or
+      casks | intersect(installed_brew_casks.stdout_lines) | length > 0
+    - enabled != "ignore"
