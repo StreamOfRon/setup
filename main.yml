@@ -104,28 +104,36 @@
       when:
         - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
-      
+
     - name: Manage common cli tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_common_cli_tools | default(false) }}"
         groupname: common cli
         formulae: "{{ common_cli_formulae }}"
         casks: "{{ common_cli_casks }}"
-      when: install_common_cli_tools and ansible_pkg_mgr == "homebrew"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage aws tools
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: "{{ install_aws_tools | default(false) }}"
         groupname: aws
         formulae: "{{ aws_formulae }}"
         casks: "{{ aws_casks }}"
-      when: install_aws_tools and ansible_pkg_mgr == "homebrew"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
+
     - name: Manage other packages
       ansible.builtin.import_tasks: tasks/homebrew_packages.yml
       vars:
+        enabled: true
         groupname: other
         formulae: "{{ install_other_formulae }}"
         casks: "{{ install_other_casks }}"
-      when: ansible_pkg_mgr == "homebrew"
+      when:
+        - ansible_pkg_mgr == "homebrew"
       ignore_errors: true
