@@ -1,6 +1,7 @@
 setup_ansible_pull: true
 dotfiles: true
 oh_my_zsh: true
+
 vscode: false
 
 install_apple_office: false
@@ -37,14 +38,16 @@ media_casks:
   - makemkv
 
 install_kube_apps: false
+kube_taps:
+  - derailed/k9s
 kube_formulae:
   - argocd
   - kubernetes-cli
-  - derailed/k9s/k9s
+  - k9s
   - kubectx
   - podman-compose
 kube_casks:
-  - openlens
+  - freelens
   - podman-desktop
 
 install_dev_tools: false
@@ -52,7 +55,10 @@ devtools_formulae:
   - ansible-lint
   - gh
   - git
-devtools_casks: []
+devtools_casks:
+  - font-fira-code
+  - font-fira-code-nerd-font
+  - visual-studio-code
 
 install_common_cli_tools: false
 common_cli_formulae:

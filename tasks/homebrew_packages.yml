@@ -1,3 +1,14 @@
+- name: '{{ enabled | ternary("Ensure", "Remove") }} taps for {{ groupname }}'
+  community.general.homebrew_tap:
+    name: "{{ taps }}"
+    state: '{{ enabled | ternary("present", "absent") }}'
+  when:
+    - taps is defined
+    - taps | length > 0
+    - taps | difference(brew_taps.stdout_lines) | length > 0 or
+      (taps | intersect(brew_taps.stdout_lines) | length > 0 and not enabled)
+    - enabled != "ignore"
+
 - name: '{{ enabled | ternary("Install", "Remove") }} homebrew formulae for {{ groupname }}'
   community.general.homebrew:
     name: "{{ formulae }}"
@@ -5,7 +16,7 @@
   when:
     - formulae | length > 0
     - formulae | difference(installed_brew_formulae.stdout_lines) | length > 0 or
-      formulae | intersect(installed_brew_formulae.stdout_lines) | length > 0
+      (formulae | intersect(installed_brew_formulae.stdout_lines) | length > 0 and not enabled)
     - enabled != "ignore"
 
 - name: '{{ enabled | ternary("Install", "Remove") }} homebrew casks for {{ groupname }}'
@@ -13,10 +24,8 @@
     name: "{{ casks }}"
     state: '{{ enabled | ternary("present", "absent") }}'
     sudo_password: "{{ ansible_become_password | default() }}"
-    install_options:
-      - "force"
   when:
     - casks | length > 0
     - casks | difference(installed_brew_casks.stdout_lines) | length > 0 or
-      casks | intersect(installed_brew_casks.stdout_lines) | length > 0
+      (casks | intersect(installed_brew_casks.stdout_lines) | length > 0 and not enabled)
     - enabled != "ignore"
