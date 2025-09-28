@@ -12,7 +12,7 @@
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
 
 - name: Install git-credential-manager (needs SUDO)
-  ansible.community.general.homebrew:
+  community.general.homebrew:
     name: git-credential-manager
     state: present
   when: ansible_pkg_mgr == "homebrew"
