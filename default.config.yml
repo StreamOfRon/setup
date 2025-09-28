@@ -52,7 +52,6 @@ devtools_formulae:
   - ansible-lint
   - gh
   - git
-  - git-credential-manager
 devtools_casks: []
 
 install_common_cli_tools: false

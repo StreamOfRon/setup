@@ -11,6 +11,13 @@
     src: templates/zshrc.j2
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
 
+- name: Install git-credential-manager (needs SUDO)
+  ansible.community.general.homebrew:
+    name: git-credential-manager
+    state: present
+  when: ansible_pkg_mgr == "homebrew"
+  become: true
+
 - name: Find full path to git-credential-manager
   ansible.builtin.command:
     cmd: which git-credential-manager
