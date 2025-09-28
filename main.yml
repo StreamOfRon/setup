@@ -88,6 +88,7 @@
       vars:
         enabled: "{{ install_kube_apps | default(false) }}"
         groupname: kube
+        taps: "{{ kube_taps }}"
         formulae: "{{ kube_formulae }}"
         casks: "{{ kube_casks }}"
       when:

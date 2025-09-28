@@ -1,7 +1,13 @@
+- name: Check if OMZ is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: omz_dir
+
 - name: Install OMZ
+  become: false
   ansible.builtin.shell:
     cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
-    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  when: not omz_dir.stat.exists
 
 - name: Ensure the target directory does not exist before cloning
   ansible.builtin.stat:
@@ -25,8 +31,9 @@
       vars:
         items:
           - font-meslo-for-powerlevel10k
-      when: "items | difference(installed_brew_casks.stdout) | length > 0"
+      when: items | difference(installed_brew_casks.stdout_lines) | length > 0
       ignore_errors: true
+
     - name: Install powerlevel10k
       community.general.homebrew:
         name: "{{ items }}"
@@ -35,7 +42,7 @@
         items:
           - autoenv
           - powerlevel10k
-      when: "items | difference(installed_brew_formulae.stdout) | length > 0"
+      when: items | difference(installed_brew_formulae.stdout_lines) | length > 0
 
 - name: Install autoenv from git
   when: ansible_pkg_mgr != "homebrew"
