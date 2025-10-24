@@ -15,6 +15,19 @@ models:
     requestOptions:
       timeout: 3000
 
+  - name: gpt-oss-NPU
+    provider: openai
+    apiBase: ${{ secrets.FLM_URI }}
+    apiKey: ${{ secrets.LOCALLLAMA_KEY }}
+    model: gpt-oss:20b
+    roles:
+      - chat
+      - edit
+    capabilities:
+      - tool_use
+    requestOptions:
+      timeout: 3000
+
   - name: Llama-Swap
     provider: openai
     apiBase: ${{ secrets.LOCALLLAMA_URI }}
@@ -68,12 +81,6 @@ mcpServers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-memory"
-  - name: Filesystem
-    command: npx
-    args:
-      - "-y"
-      - "@modelcontextprotocol/server-filesystem"
-      - "${workspaceFolder}"
   - name: Browser search
     command: npx
     args:
