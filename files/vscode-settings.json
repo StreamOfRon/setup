@@ -17,5 +17,6 @@
   "editor.fontFamily": "Fira Code",
   "editor.fontLigatures": true,
   "files.autoSave": "afterDelay",
-  "continue.enableNextEdit": false
+  "continue.enableNextEdit": false,
+  "python.terminal.executeInFileDir": false
 }
