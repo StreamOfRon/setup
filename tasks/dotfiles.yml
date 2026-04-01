@@ -37,6 +37,12 @@
   when: ansible_os_family != 'Windows'
   ignore_errors: true
 
+- name: Remove empty credential helper lines from .gitconfig
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.gitconfig"
+    regexp: '^\thelper =\s*$'
+    state: absent
+
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
