@@ -1,13 +1,13 @@
 - name: Disable cron email
   ansible.builtin.cron:
     name: MAILTO
-    env: yes
+    env: true
     job: ""
 
 - name: Setup cron PATH
   ansible.builtin.cron:
     name: PATH
-    env: yes
+    env: true
     job: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 
 - name: Ansible-pull cron job

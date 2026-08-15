@@ -15,7 +15,7 @@ plugins=(autoupdate command-not-found gh git git-auto-fetch git-commit macos)
 # Allow plugins to be overridden/appended locally
 [[ ! -f ~/.zshrc.omz.local ]] || source ~/.zshrc.omz.local
 source $ZSH/oh-my-zsh.sh
-{% if ansible_pkg_mgr == "homebrew" %}
+{% if ansible_facts.pkg_mgr == "homebrew" %}
 BREW_PREFIX=$(brew --prefix)
 [[ ! -f $BREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme ]] || source $BREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f $BREW_PREFIX/opt/powerlevel10k/powerlevel10k.zsh-theme ]] || source $BREW_PREFIX/opt/powerlevel10k/powerlevel10k.zsh-theme

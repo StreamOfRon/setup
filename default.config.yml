@@ -1,3 +1,7 @@
+# Group toggles accept three values:
+#   true  - install all apps in the group
+#   false - remove all apps in the group
+#   ignore - skip the group entirely
 setup_ansible_pull: true
 dotfiles: true
 oh_my_zsh: true
@@ -55,6 +59,7 @@ devtools_formulae:
   - ansible-lint
   - gh
   - git
+  - pre-commit
 devtools_casks:
   - font-fira-code
   - font-fira-code-nerd-font
@@ -72,6 +77,7 @@ aws_formulae:
   - s3cmd
 aws_casks: []
 
+install_other_apps: true
 install_other_formulae: []
 install_other_casks: []
 remove_other_formulae: []

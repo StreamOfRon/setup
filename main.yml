@@ -1,5 +1,8 @@
-- hosts: all
+- name: Workstation setup
+  hosts: all
   gather_facts: true
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
   vars_files:
     - default.config.yml
@@ -17,124 +20,174 @@
 
     - name: Update package managers
       block:
-        - name: Update homewbrew packages
+        - name: Update homebrew packages
           community.general.homebrew:
             update_homebrew: true
-          when: ansible_pkg_mgr == "homebrew"
+          when: ansible_facts.pkg_mgr == "homebrew"
 
     - name: Get list of installed packages
       block:
-        - name: Get installed homebew packages
+        - name: Get installed homebrew packages
           ansible.builtin.import_tasks: tasks/homebrew_list.yml
-          when: ansible_pkg_mgr == "homebrew"
+          when: ansible_facts.pkg_mgr == "homebrew"
 
   tasks:
-    - ansible.builtin.import_tasks: tasks/ansible-pull-cron.yml
+    - name: Configure ansible-pull cron jobs
+      ansible.builtin.import_tasks: tasks/ansible-pull-cron.yml
       when: setup_ansible_pull
-    - ansible.builtin.import_tasks: tasks/dotfiles.yml
+    - name: Install dotfiles
+      ansible.builtin.import_tasks: tasks/dotfiles.yml
       when: dotfiles
-    - ansible.builtin.import_tasks: tasks/oh-my-zsh.yml
+    - name: Install Oh My Zsh
+      ansible.builtin.import_tasks: tasks/oh-my-zsh.yml
       when: oh_my_zsh
-    - ansible.builtin.import_tasks: tasks/vscode.yml
+    - name: Configure VSCode
+      ansible.builtin.import_tasks: tasks/vscode.yml
       when: vscode
-    - ansible.builtin.import_tasks: tasks/mac-app-store.yml
+    - name: Manage Mac App Store apps
+      ansible.builtin.import_tasks: tasks/mac-app-store.yml
       when: mac_app_store
     - name: Manage sync tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_sync_tools | default(false) }}"
-        groupname: sync
-        formulae: "{{ sync_formulae }}"
-        casks: "{{ sync_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage sync tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_sync_tools | default(false) }}"
+            groupname: sync
+            formulae: "{{ sync_formulae }}"
+            casks: "{{ sync_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about sync tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage sync tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage misc apps
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_misc_apps | default(false) }}"
-        groupname: misc
-        formulae: "{{ misc_formulae }}"
-        casks: "{{ misc_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage misc apps packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_misc_apps | default(false) }}"
+            groupname: misc
+            formulae: "{{ misc_formulae }}"
+            casks: "{{ misc_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about misc apps install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage misc apps, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage entertainment apps
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_entertainment_apps | default(false) }}"
-        groupname: entertainment
-        formulae: "{{ entertainment_formulae }}"
-        casks: "{{ entertainment_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage entertainment apps packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_entertainment_apps | default(false) }}"
+            groupname: entertainment
+            formulae: "{{ entertainment_formulae }}"
+            casks: "{{ entertainment_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about entertainment apps install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage entertainment apps, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage media tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_media_tools | default(false) }}"
-        groupname: media
-        formulae: "{{ media_formulae }}"
-        casks: "{{ media_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage media tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_media_tools | default(false) }}"
+            groupname: media
+            formulae: "{{ media_formulae }}"
+            casks: "{{ media_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about media tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage media tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage kube tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_kube_apps | default(false) }}"
-        groupname: kube
-        taps: "{{ kube_taps }}"
-        formulae: "{{ kube_formulae }}"
-        casks: "{{ kube_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage kube tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_kube_apps | default(false) }}"
+            groupname: kube
+            taps: "{{ kube_taps }}"
+            formulae: "{{ kube_formulae }}"
+            casks: "{{ kube_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about kube tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage kube tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage dev tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_dev_tools | default(false) }}"
-        groupname: dev
-        formulae: "{{ devtools_formulae }}"
-        casks: "{{ devtools_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage dev tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_dev_tools | default(false) }}"
+            groupname: dev
+            formulae: "{{ devtools_formulae }}"
+            casks: "{{ devtools_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about dev tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage dev tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage common cli tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_common_cli_tools | default(false) }}"
-        groupname: common cli
-        formulae: "{{ common_cli_formulae }}"
-        casks: "{{ common_cli_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage common cli tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_common_cli_tools | default(false) }}"
+            groupname: common cli
+            formulae: "{{ common_cli_formulae }}"
+            casks: "{{ common_cli_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about common cli tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage common cli tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage aws tools
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: "{{ install_aws_tools | default(false) }}"
-        groupname: aws
-        formulae: "{{ aws_formulae }}"
-        casks: "{{ aws_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage aws tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_aws_tools | default(false) }}"
+            groupname: aws
+            formulae: "{{ aws_formulae }}"
+            casks: "{{ aws_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about aws tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage aws tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage other packages
-      ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-      vars:
-        enabled: true
-        groupname: other
-        formulae: "{{ install_other_formulae }}"
-        casks: "{{ install_other_casks }}"
-      when:
-        - ansible_pkg_mgr == "homebrew"
-      ignore_errors: true
+      block:
+        - name: Manage other homebrew packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_other_apps | default(true) }}"
+            groupname: other
+            formulae: "{{ install_other_formulae }}"
+            casks: "{{ install_other_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about other packages install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage other packages, continuing: {{ ansible_failed_result | default('unknown error') }}"

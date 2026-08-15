@@ -1,4 +1,4 @@
-- name: '{{ enabled | ternary("Ensure", "Remove") }} taps for {{ groupname }}'
+- name: Homebrew taps for {{ groupname }}
   community.general.homebrew_tap:
     name: "{{ taps }}"
     state: '{{ enabled | ternary("present", "absent") }}'
@@ -9,7 +9,7 @@
       (taps | intersect(brew_taps.stdout_lines) | length > 0 and not enabled)
     - enabled != "ignore"
 
-- name: '{{ enabled | ternary("Install", "Remove") }} homebrew formulae for {{ groupname }}'
+- name: Homebrew formulae for {{ groupname }}
   community.general.homebrew:
     name: "{{ formulae }}"
     state: '{{ enabled | ternary("latest", "absent") }}'
@@ -19,7 +19,7 @@
       (formulae | intersect(installed_brew_formulae.stdout_lines) | length > 0 and not enabled)
     - enabled != "ignore"
 
-- name: '{{ enabled | ternary("Install", "Remove") }} homebrew casks for {{ groupname }}'
+- name: Homebrew casks for {{ groupname }}
   community.general.homebrew_cask:
     name: "{{ casks }}"
     state: '{{ enabled | ternary("present", "absent") }}'

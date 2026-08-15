@@ -2,6 +2,7 @@
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ lookup('env', 'HOME') }}/"
+    mode: "0644"
   loop:
     - files/.vimrc
     - files/.gitignore
@@ -10,23 +11,23 @@
   ansible.builtin.template:
     src: templates/zshrc.j2
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+    mode: "0644"
 
 - name: Install git-credential-manager (needs SUDO)
   community.general.homebrew:
     name: git-credential-manager
     state: present
   when:
-    - ansible_pkg_mgr == "homebrew"
+    - ansible_facts.pkg_mgr == "homebrew"
     - ansible_become_password is defined
     - "'git-credential-manager' not in installed_brew_casks.stdout_lines"
-    
 
 - name: Find full path to git-credential-manager
   ansible.builtin.command:
     cmd: which git-credential-manager
   register: gcm_path
   changed_when: false
-  when: ansible_os_family != 'Windows'
+  when: ansible_facts.os_family != 'Windows'
   ignore_errors: true
 
 - name: Find full path to github cli
@@ -34,7 +35,7 @@
     cmd: which gh
   register: gh_path
   changed_when: false
-  when: ansible_os_family != 'Windows'
+  when: ansible_facts.os_family != 'Windows'
   ignore_errors: true
 
 - name: Remove empty credential helper lines from .gitconfig
@@ -48,9 +49,11 @@
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"
     block: "{{ lookup('ansible.builtin.template', 'templates/.gitconfig.j2') }}"
     create: true
+    mode: "0644"
 
 - name: .ssh/config
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.ssh/config"
     block: "{{ lookup('ansible.builtin.file', 'files/ssh_config') }}"
     create: true
+    mode: "0600"
