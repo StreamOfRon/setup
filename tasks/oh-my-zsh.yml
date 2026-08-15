@@ -1,6 +1,6 @@
 - name: Check if OMZ is already installed
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
   register: omz_dir
 
 - name: Install OMZ
@@ -8,6 +8,7 @@
   ansible.builtin.shell:
     cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
   when: not omz_dir.stat.exists
+  changed_when: false
 
 - name: Ensure the target directory does not exist before cloning
   ansible.builtin.stat:
@@ -18,97 +19,115 @@
   ansible.builtin.git:
     repo: https://github.com/TamCore/autoupdate-oh-my-zsh-plugins.git
     dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/plugins/autoupdate"
+    version: HEAD
     depth: 1
     single_branch: true
   when: not repo_dir.stat.exists
 
 - name: Install powerlevel10k theme and font with homebrew
-  when: ansible_pkg_mgr == "homebrew"
+  when: ansible_facts.pkg_mgr == "homebrew"
   block:
     - name: Install meslo fonts
-      community.general.homebrew_cask:
-        name: "{{ items }}"
       vars:
         items:
           - font-meslo-for-powerlevel10k
       when: items | difference(installed_brew_casks.stdout_lines) | length > 0
-      ignore_errors: true
+      block:
+        - name: Install meslo fonts via homebrew cask
+          community.general.homebrew_cask:
+            name: "{{ items }}"
+      rescue:
+        - name: Warn about meslo fonts install failure
+          ansible.builtin.debug:
+            msg: "Failed to install meslo fonts, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Install powerlevel10k
-      community.general.homebrew:
-        name: "{{ items }}"
-        state: present
       vars:
         items:
           - autoenv
           - powerlevel10k
+      community.general.homebrew:
+        name: "{{ items }}"
+        state: present
       when: items | difference(installed_brew_formulae.stdout_lines) | length > 0
 
 - name: Install autoenv from git
-  when: ansible_pkg_mgr != "homebrew"
+  when: ansible_facts.pkg_mgr != "homebrew"
   ansible.builtin.git:
     repo: https://github.com/hyperupcall/autoenv.git
     dest: "{{ lookup('env', 'HOME') }}/.autoenv"
+    version: HEAD
     depth: 1
     single_branch: true
 
 - name: Install powerlevel10k theme from git
-  when: ansible_pkg_mgr != "homebrew"
+  when: ansible_facts.pkg_mgr != "homebrew"
   block:
     - name: Pull powerlevel10k theme
       ansible.builtin.git:
         repo: https://github.com/romkatv/powerlevel10k.git
         dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
+        version: HEAD
         depth: 1
         single_branch: true
 
-
 - name: Install Meslo nerd fonts
+  when: ansible_facts.pkg_mgr != "homebrew"
   block:
     - name: Ensure local fonts dir exists
       ansible.builtin.file:
         path: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
         state: directory
-    - ansible.builtin.stat:
+        mode: "0755"
+    - name: Check MesloLGS NF Regular font
+      ansible.builtin.stat:
         path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Regular.ttf"
       register: regular
-    - name: "Regular"
+    - name: Install MesloLGS NF Regular font
       ansible.builtin.get_url:
         url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf"
         dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Regular.ttf"
+        mode: "0644"
       when: not regular.stat.exists
-    - ansible.builtin.stat:
+    - name: Check MesloLGS NF Bold font
+      ansible.builtin.stat:
         path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold.ttf"
       register: bold
-    - name: "Bold"
+    - name: Install MesloLGS NF Bold font
       ansible.builtin.get_url:
         url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf"
         dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold.ttf"
+        mode: "0644"
       when: not bold.stat.exists
-    - ansible.builtin.stat:
+    - name: Check MesloLGS NF Italic font
+      ansible.builtin.stat:
         path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Italic.ttf"
       register: italic
-    - name: "Italic"
+    - name: Install MesloLGS NF Italic font
       ansible.builtin.get_url:
         url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf"
         dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Italic.ttf"
+        mode: "0644"
       when: not italic.stat.exists
-    - ansible.builtin.stat:
+    - name: Check MesloLGS NF Bold Italic font
+      ansible.builtin.stat:
         path: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold Italic.ttf"
       register: bold_italic
-    - name: "Bold Italic"
+    - name: Install MesloLGS NF Bold Italic font
       ansible.builtin.get_url:
         url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf"
         dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts/MesloLGS NF Bold Italic.ttf"
+        mode: "0644"
       when: not bold_italic.stat.exists
-  when: ansible_pkg_mgr != "homebrew"
 
 - name: .zshrc.omz
   ansible.builtin.template:
     src: templates/zshrc.omz.j2
     dest: "{{ lookup('env', 'HOME') }}/.zshrc.omz"
+    mode: "0644"
 
 - name: .p10k.zsh
   ansible.builtin.copy:
     src: files/p10k.zsh
     dest: "{{ lookup('env', 'HOME') }}/.p10k.zsh"
+    mode: "0644"

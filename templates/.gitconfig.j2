@@ -14,14 +14,14 @@
 [credential "https://gist.github.com"]
 	helper = !{{ gh_path.stdout }} auth git-credential
 {% endif %}
-{% if ansible_os_family == 'Windows'%}
+{% if ansible_facts.os_family == 'Windows'%}
 [credential]
 	helper = manager
 	credentialStore = wincredman
 {% elif gcm_path.rc == 0 %}
 [credential]
 	helper = {{ gcm_path.stdout }}
-{% if ansible_os_family == 'Darwin' %}
+{% if ansible_facts.os_family == 'Darwin' %}
 	credentialStore = keychain
 {% else %}
 	credentialStore = secretservice

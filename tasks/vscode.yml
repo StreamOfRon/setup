@@ -2,32 +2,38 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User"
     state: directory
-  when: ansible_system == "Darwin"
+    mode: "0755"
+  when: ansible_facts.system == "Darwin"
 
 - name: Install VSCode Config (Mac)
   ansible.builtin.copy:
     src: files/vscode-settings.json
     dest: "{{ lookup('env', 'HOME') }}/Library/Application Support/Code/User/settings.json"
-  when: ansible_system == "Darwin"
+    mode: "0644"
+  when: ansible_facts.system == "Darwin"
 
 - name: Ensure VSCode config path exists (Linux)
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/Code/User"
     state: directory
-  when: ansible_system == "Linux"
+    mode: "0755"
+  when: ansible_facts.system == "Linux"
 
 - name: Install VSCode Config (Linux)
   ansible.builtin.copy:
     src: files/vscode-settings.json
     dest: "{{ lookup('env', 'HOME') }}/.config/Code/User/settings.json"
-  when: ansible_system == "Linux"
+    mode: "0644"
+  when: ansible_facts.system == "Linux"
 
 - name: Ensure continue.dev config path exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.continue"
     state: directory
+    mode: "0755"
 
 - name: Install continue.dev configuration
   ansible.builtin.copy:
     src: files/continue/
     dest: "{{ lookup('env', 'HOME') }}/.continue/"
+    mode: "0644"

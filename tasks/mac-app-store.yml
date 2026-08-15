@@ -5,6 +5,8 @@
     state: present
 
 - name: Install apps
+  vars:
+    package_state: present
   block:
     - name: Install app store apps
       community.general.mas:
@@ -31,10 +33,11 @@
         state: "{{ package_state }}"
         id: 408981434
       when: install_imovie
-  vars:
-    package_state: present
 
 - name: Uninstall apps
+  vars:
+    package_state: absent
+  become: true
   block:
     - name: Uninstall app store apps
       community.general.mas:
@@ -61,7 +64,7 @@
         state: "{{ package_state }}"
         id: 408981434
       when: not install_imovie
-  vars:
-    package_state: absent
-  become: true
-  ignore_errors: true # Need to figure out how to do this with the permissions requried.
+  rescue:
+    - name: Warn about app uninstall failure
+      ansible.builtin.debug:
+        msg: "Failed to uninstall apps, continuing: {{ ansible_failed_result | default('unknown error') }}"
