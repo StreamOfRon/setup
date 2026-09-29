@@ -1,0 +1,44 @@
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: Check for uv binary
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
+  register: uv_bin
+
+- name: Download uv install script
+  ansible.builtin.get_url:
+    url: https://astral.sh/uv/install.sh
+    dest: /tmp/uv-install.sh
+    mode: "0755"
+  when: not uv_bin.stat.exists
+
+- name: Install uv via official script
+  ansible.builtin.command:
+    cmd: /bin/sh /tmp/uv-install.sh
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
+  when: not uv_bin.stat.exists
+
+- name: Create default venv with uv
+  ansible.builtin.command:
+    cmd: "{{ lookup('env', 'HOME') }}/.local/bin/uv venv {{ agent_python_venv }} --seed"
+    creates: "{{ agent_python_venv }}/bin/python"
+
+- name: Install common python packages into default venv
+  ansible.builtin.command:
+    cmd: "{{ lookup('env', 'HOME') }}/.local/bin/uv pip install --python {{ agent_python_venv }}/bin/python {{ agent_python_packages | join(' ') }}"
+  register: agent_python_pip
+  changed_when: >-
+    'Installed' in agent_python_pip.stdout or
+    'Installed' in agent_python_pip.stderr or
+    'Updated' in agent_python_pip.stdout or
+    'Updated' in agent_python_pip.stderr
+  when: agent_python_packages | length > 0
+
+- name: Verify plain import works in default venv
+  ansible.builtin.command:
+    cmd: "{{ agent_python_venv }}/bin/python -c \"import yaml; print(yaml.__version__)\""
+  changed_when: false

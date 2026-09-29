@@ -41,6 +41,9 @@
     - name: Install Oh My Zsh
       ansible.builtin.import_tasks: tasks/oh-my-zsh.yml
       when: oh_my_zsh
+    - name: Set up agent Python environment
+      ansible.builtin.import_tasks: tasks/agent_python.yml
+      when: agent_python | default(true)
     - name: Configure VSCode
       ansible.builtin.import_tasks: tasks/vscode.yml
       when: vscode
