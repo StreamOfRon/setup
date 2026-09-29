@@ -5,6 +5,10 @@
 setup_ansible_pull: true
 dotfiles: true
 oh_my_zsh: true
+agent_python: true
+agent_python_venv: "{{ lookup('env', 'HOME') }}/.local/share/default-venv"
+agent_python_packages:
+  - pyyaml
 
 vscode: false
 
@@ -60,6 +64,7 @@ devtools_formulae:
   - gh
   - git
   - pre-commit
+  - yq
 devtools_casks:
   - font-fira-code
   - font-fira-code-nerd-font
