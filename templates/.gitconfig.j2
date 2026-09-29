@@ -9,9 +9,14 @@
 	branch = false
 	diff = false
 {% if gh_path.rc == 0 %}
+{# The empty "helper =" resets the helper list inherited from the system gitconfig (Homebrew's
+   osxkeychain), which would otherwise answer first with a stored login and bypass gh and
+   GITHUB_TOKEN (e.g. a per-directory direnv token). #}
 [credential "https://github.com"]
+	helper =
 	helper = !{{ gh_path.stdout }} auth git-credential
 [credential "https://gist.github.com"]
+	helper =
 	helper = !{{ gh_path.stdout }} auth git-credential
 {% endif %}
 {% if ansible_facts.os_family == 'Windows'%}
