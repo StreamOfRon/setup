@@ -1,13 +1,37 @@
-- name: Check if OMZ is already installed
+# Some distro packages (e.g. Debian/Armbian's armbian-zsh) pre-create a
+# ~/.oh-my-zsh skeleton that only holds a cache dir, so the directory alone is
+# not proof that the framework is installed. Gate on its entrypoint instead.
+- name: Check for the Oh My Zsh entrypoint
   ansible.builtin.stat:
-    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/oh-my-zsh.sh"
+  register: omz_entrypoint
+
+- name: Check for an Oh My Zsh directory
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
   register: omz_dir
+
+# The upstream installer refuses to run when $ZSH already exists; move the
+# skeleton aside so the real checkout can be created in its place.
+- name: Move an incomplete Oh My Zsh directory aside
+  become: false
+  ansible.builtin.command:
+    cmd: >-
+      mv {{ lookup('env', 'HOME') }}/.oh-my-zsh
+      {{ lookup('env', 'HOME') }}/.oh-my-zsh.incomplete-{{ ansible_date_time.epoch }}
+  args:
+    removes: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  when:
+    - omz_dir.stat.exists
+    - not omz_entrypoint.stat.exists
 
 - name: Install OMZ
   become: false
   ansible.builtin.shell:
-    cmd: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
-  when: not omz_dir.stat.exists
+    cmd: >-
+      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" ""
+      --unattended --keep-zshrc
+  when: not omz_entrypoint.stat.exists
   changed_when: false
 
 - name: Ensure the target directory does not exist before cloning

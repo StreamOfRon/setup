@@ -22,7 +22,7 @@ case "${OS}" in
   fi
 
   NONINTERACTIVE=1
-  $BREW install ansible flock
+  $BREW install ansible git flock
   ;;
 
 "Linux")
@@ -34,12 +34,12 @@ case "${OS}" in
       case "${name}" in
       "apt")
         sudo $PKGMGR update
-        sudo $PKGMGR install ansible
+        sudo $PKGMGR install ansible git
         ;;
 
       "pamac")
         $PKGMGR update
-        $PKGMGR install ansible flock
+        $PKGMGR install ansible git flock
         ;;
 
       *)
