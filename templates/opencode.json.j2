@@ -1,0 +1,151 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "formatter": false,
+  "plugins": [
+    "opencode-synced",
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    {
+      "package": "opencode-plugin-searxng@git+https://github.com/StreamOfRon/opencode-plugin-searxng.git",
+      "options": {
+        "baseURL": "https://searxng.int.cshome.link"
+      }
+    }
+  ],
+  "default_agent": "build",
+  "agents": {
+    "title": {
+      "model": "openrouter/openrouter/free"
+    }
+  },
+  "commands": {
+    "review": {
+      "template": "Review the changes made in this working path.  Review each file changed, and both look up and follow method calls to review each change in its greater context.  Do not output a summary of the changes - only output issues and concerns.  When reviewing code, do not flag speculative issues without first trying to disprove the speculation.  Flag any unclear issues at the end of the review in a separate section",
+      "subagent": true
+    },
+    "commit": {
+      "template": "Write a concise but descriptive commit message summarizing the changes made in this working path.  Do not include any information about the reasoning behind the change or the process of making the change - only summarize what was changed.  Do not include any information that is not explicitly stated in the code changes - if you have to infer anything, leave it out of the commit message.  After writing the commit message, commit the changes to the local repository without pushing to the remote repository",
+      "subagent": true
+    },
+    "commit-and-push": {
+      "template": "Write a concise but descriptive commit message summarizing the changes made in this working path.  Do not include any information about the reasoning behind the change or the process of making the change - only summarize what was changed.  Do not include any information that is not explicitly stated in the code changes - if you have to infer anything, leave it out of the commit message.  After writing the commit message, commit and push the changes to the remote repository",
+      "subagent": true
+    }
+  },
+  "mcp": {
+    "servers": {
+      "context7": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@upstash/context7-mcp"
+        ]
+      },
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp@latest",
+          "--browser",
+          "chromium"
+        ],
+        "disabled": false
+      }
+    }
+  },
+  "permissions": [
+    {
+      "action": "external_directory",
+      "resource": "~/.config/opencode/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "~/Work/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/tmp/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/private/tmp/*",
+      "effect": "allow"
+    }
+  ],
+  "providers": {
+    "litellm": {
+      "name": "LiteLLM",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://litellm.ext.cshome.link/v1",
+        "timeout": false
+      },
+      "models": {
+        "llamaswap/qwen3.6-35b-a3b": {
+          "name": "Qwen3.6 35b-a3b",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "llamaswap/qwen3.8-27b": {
+          "name": "Qwen3.8 27b",
+          "limit": {
+            "context": 160000,
+            "output": 32768
+          }
+        },
+				"llamaswap/thinkingcap-qwen3.8-27b": {
+					"name": "ThinkingCap Qwen3.8 27b",
+					"limit": {
+						"context": 160000,
+						"output": 32768
+					}
+				}
+      }
+    },
+    "lemonade": {
+      "name": "Lemonade",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://localhost:13305/v1",
+        "apiKey": "-",
+        "modelsDiscovery": {
+          "enabled": true,
+          "models": {
+            "excludeBy": [
+              {
+                "field": "available",
+                "equals": false
+              },
+              {
+                "field": "id",
+                "match": "embed"
+              }
+            ]
+          },
+          "smartModelName": true,
+          "modelInfoFormat": "models.dev"
+        }
+      }
+    }
+  },
+  "experimental": {
+    "policies": [
+      {
+        "action": "provider.use",
+        "resource": "amazon-bedrock",
+        "effect": "deny"
+      },
+      {
+        "action": "provider.use",
+        "resource": "github-copilot",
+        "effect": "deny"
+      }
+    ]
+  }
+}

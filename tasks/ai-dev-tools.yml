@@ -1,0 +1,41 @@
+- name: Homebrew packages for ai dev tools
+  ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+  vars:
+    enabled: "{{ install_ai_dev_tools | default(false) }}"
+    groupname: ai-dev-tools
+    formulae: "{{ ai_dev_tools_formulae }}"
+    casks: "{{ ai_dev_tools_casks }}"
+  when:
+    - ansible_facts.pkg_mgr == "homebrew"
+
+- name: Install opencode via official script
+  ansible.builtin.shell: curl -fsSL https://opencode.ai/install | bash
+  changed_when: false
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Install omp via official script
+  ansible.builtin.shell: curl -fsSL https://omp.sh/install | sh
+  changed_when: false
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Manage opencode configuration
+  ansible.builtin.import_tasks: tasks/opencode.yml
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Manage omp configuration
+  ansible.builtin.import_tasks: tasks/omp.yml
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Set up herdr and worktrunk
+  ansible.builtin.import_tasks: tasks/herdr.yml
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Install agent skills (StreamOfRon/agent-skills)
+  ansible.builtin.command: npx -y skills add -g StreamOfRon/agent-skills
+  changed_when: false
+  when: install_ai_dev_tools | default(false) != "ignore"
+
+- name: Install agent skills (crusty-old-engineer)
+  ansible.builtin.command: npx -y skills add -g microsoft/amplifier-bundle-skills --skill crusty-old-engineer
+  changed_when: false
+  when: install_ai_dev_tools | default(false) != "ignore"

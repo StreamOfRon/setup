@@ -1,0 +1,11 @@
+providers:
+  litellm:
+    modelOverrides:
+      llamaswap/qwen3.8-27b:
+        contextWindow: 160000
+      llamaswap/thinkingcap-qwen3.8-27b:
+        contextWindow: 160000
+        reasoning: true
+        thinking:
+          mode: effort
+          efforts: ["low", "medium", "xhigh"]

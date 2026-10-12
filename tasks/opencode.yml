@@ -1,0 +1,16 @@
+- name: Ensure opencode config directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/opencode"
+    state: directory
+
+- name: Manage opencode.json
+  ansible.builtin.template:
+    src: templates/opencode.json.j2
+    dest: "{{ lookup('env', 'HOME') }}/.config/opencode/opencode.json"
+    mode: "0644"
+
+- name: Manage opencode cli.json
+  ansible.builtin.template:
+    src: templates/opencode-cli.json.j2
+    dest: "{{ lookup('env', 'HOME') }}/.config/opencode/cli.json"
+    mode: "0600"
