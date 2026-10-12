@@ -58,14 +58,18 @@ kube_casks:
   - freelens
   - podman-desktop
 
-install_dev_tools: false
-devtools_formulae:
+install_dev_cli_tools: false
+dev_cli_formulae:
   - ansible-lint
   - gh
   - git
   - pre-commit
   - yq
-devtools_casks:
+dev_cli_casks: []
+
+install_dev_gui_tools: false
+dev_gui_formulae: []
+dev_gui_casks:
   - font-fira-code
   - font-fira-code-nerd-font
   - visual-studio-code
