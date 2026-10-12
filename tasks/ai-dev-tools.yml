@@ -1,3 +1,7 @@
+# Three-valued group semantics:
+#   true   - install and manage everything below
+#   false  - remove what this group installed (brew handled by homebrew_packages)
+#   ignore - skip the group entirely, leave everything as-is
 - name: Homebrew packages for ai dev tools
   ansible.builtin.import_tasks: tasks/homebrew_packages.yml
   vars:
@@ -8,34 +12,94 @@
   when:
     - ansible_facts.pkg_mgr == "homebrew"
 
+# --- true: install and manage ---
+
 - name: Install opencode via official script
   ansible.builtin.shell: curl -fsSL https://opencode.ai/install | bash
   changed_when: false
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
 
 - name: Install omp via official script
   ansible.builtin.shell: curl -fsSL https://omp.sh/install | sh
   changed_when: false
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
 
 - name: Manage opencode configuration
   ansible.builtin.import_tasks: tasks/opencode.yml
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
 
 - name: Manage omp configuration
   ansible.builtin.import_tasks: tasks/omp.yml
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
 
 - name: Set up herdr and worktrunk
   ansible.builtin.import_tasks: tasks/herdr.yml
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
+
+# --- false: remove what this group installed ---
+
+- name: Remove opencode binary
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.opencode/bin/opencode"
+    state: absent
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Remove omp binary
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/omp"
+    state: absent
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Remove managed ai dev tools configs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ lookup('env', 'HOME') }}/.config/opencode/opencode.json"
+    - "{{ lookup('env', 'HOME') }}/.config/opencode/cli.json"
+    - "{{ lookup('env', 'HOME') }}/.omp/agent/config.yml"
+    - "{{ lookup('env', 'HOME') }}/.omp/agent/models.yml"
+    - "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Check for herdr config file (for keybinding removal)
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.config/herdr/config.toml"
+  register: herdr_config_file
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Remove herdr worktree keybindings
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.config/herdr/config.toml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - herdr worktrunk keybindings"
+    block: ""
+  when:
+    - install_ai_dev_tools | default(false) == false
+    - herdr_config_file.stat.exists
+
+- name: Find herdr binary (for plugin removal)
+  ansible.builtin.command: which herdr
+  register: herdr_binary
+  changed_when: false
+  failed_when: false
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Unlink herdr-worktrunk plugin
+  ansible.builtin.command: herdr plugin unlink worktrunk
+  changed_when: false
+  when:
+    - install_ai_dev_tools | default(false) == false
+    - herdr_binary.rc is defined
+    - herdr_binary.rc == 0
+
+# --- skills are additive: installed under true, never removed by this group ---
 
 - name: Install agent skills (StreamOfRon/agent-skills)
   ansible.builtin.command: npx -y skills add -g StreamOfRon/agent-skills
   changed_when: false
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
 
 - name: Install agent skills (crusty-old-engineer)
   ansible.builtin.command: npx -y skills add -g microsoft/amplifier-bundle-skills --skill crusty-old-engineer
   changed_when: false
-  when: install_ai_dev_tools | default(false) != "ignore"
+  when: install_ai_dev_tools | default(false) == true
