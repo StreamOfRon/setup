@@ -131,21 +131,37 @@
           ansible.builtin.debug:
             msg: "Failed to manage kube tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
-    - name: Manage dev tools
+    - name: Manage dev cli tools
       block:
-        - name: Manage dev tools packages
+        - name: Manage dev cli tools packages
           ansible.builtin.import_tasks: tasks/homebrew_packages.yml
           vars:
-            enabled: "{{ install_dev_tools | default(false) }}"
-            groupname: dev
-            formulae: "{{ devtools_formulae }}"
-            casks: "{{ devtools_casks }}"
+            enabled: "{{ install_dev_cli_tools | default(false) }}"
+            groupname: dev-cli
+            formulae: "{{ dev_cli_formulae }}"
+            casks: "{{ dev_cli_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
       rescue:
-        - name: Warn about dev tools install failure
+        - name: Warn about dev cli tools install failure
           ansible.builtin.debug:
-            msg: "Failed to manage dev tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
+            msg: "Failed to manage dev cli tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
+
+    - name: Manage dev gui tools
+      block:
+        - name: Manage dev gui tools packages
+          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          vars:
+            enabled: "{{ install_dev_gui_tools | default(false) }}"
+            groupname: dev-gui
+            formulae: []
+            casks: "{{ dev_gui_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about dev gui tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage dev gui tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Manage common cli tools
       block:
