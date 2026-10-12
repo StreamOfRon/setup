@@ -5,6 +5,9 @@ export PATH="$HOME/.local/bin:$PATH"
 if [[ -d "$HOME/.local/share/default-venv/bin" ]]; then
   export PATH="$HOME/.local/share/default-venv/bin:$PATH"
 fi
+{% if install_ai_dev_tools | default(false) == true %}
+export PATH="$HOME/.opencode/bin:$PATH"
+{% endif %}
 
 [[ ! -f ~/.zshrc.omz ]] || source ~/.zshrc.omz
 
@@ -25,5 +28,10 @@ run-workflow() {
 watch-workflow() {
   gh run watch $(gh run ls -c $(git rev-parse HEAD) --workflow="$1" --json databaseId -q '.[0].databaseId')
 }
+
+{% if install_ai_dev_tools | default(false) == true %}
+# worktrunk shell integration (herdr worktree workflow)
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+{% endif %}
 
 [[ ! -f ~/.zshrc.local ]] || source ~/.zshrc.local
