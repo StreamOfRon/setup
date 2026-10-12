@@ -21,3 +21,10 @@
     name: ansible-pull reboot
     special_time: reboot
     job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
+
+- name: Ansible daily re-apply cron
+  ansible.builtin.cron:
+    name: ansible daily re-apply
+    minute: "{{ daily_apply_minute | default('0') }}"
+    hour: "{{ daily_apply_hour | default('3') }}"
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-daily-apply.sh >> {{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
