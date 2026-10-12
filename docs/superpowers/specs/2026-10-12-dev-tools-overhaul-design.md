@@ -78,9 +78,15 @@ Wired in `main.yml` after "Manage dev gui tools", same block/rescue pattern as t
   5. `import_tasks: tasks/omp.yml`
   6. `import_tasks: tasks/herdr.yml`
   7. Skills installs (below).
-- `tasks/opencode.yml`, `tasks/omp.yml`, `tasks/herdr.yml` — config management per tool.
+- `tasks/opencode.yml`, `tasks/omp.yml`, `tasks/herdr.yml` — config management per tool. Each ensures its parent config directory first (`~/.config/opencode`, `~/.omp/agent`, `~/.config/worktrunk`, `~/.config/herdr`) so fresh machines work; `blockinfile` creates the file but not its parent directory.
 
-All non-brew tasks carry `when: install_ai_dev_tools | default(false) != "ignore"`.
+Non-brew tasks honor the full three-valued toggle (matching the repo's documented group semantics):
+
+- `true` — run the installers, manage all configs, install plugin + skills.
+- `false` — actively remove what the group installed: delete the opencode/omp binaries and the managed config files, strip the herdr keybinding block (`blockinfile` with empty block), unlink the herdr-worktrunk plugin (only when the herdr binary is still present). Brew formulae are removed by `homebrew_packages.yml` as usual. Skills are never removed (additive by design).
+- `ignore` — skip the group entirely; nothing installed, managed, or removed.
+
+Install/manage/skills tasks gate on `install_ai_dev_tools | default(false) == true`; removal tasks gate on `== false`.
 
 #### Installers (recommended shell scripts)
 
@@ -103,7 +109,7 @@ All non-brew tasks carry `when: install_ai_dev_tools | default(false) != "ignore
 | Dest | Source | Method / notes |
 |---|---|---|
 | `~/.config/opencode/opencode.json` | `templates/opencode.json.j2` | full file, mode 0644. Content copied verbatim from the live file (plugins, commands, mcp servers, experimental policies). |
-| `~/.config/opencode/cli.json` | `templates/opencode-cli.json.j2` | full file, mode 0644 (UI prefs + `"./herdr-opencode"` plugin ref). |
+| `~/.config/opencode/cli.json` | `templates/opencode-cli.json.j2` | full file, **mode 0600** (matches live perms; UI prefs + `"./herdr-opencode"` plugin ref). |
 | `~/.omp/agent/config.yml` | `templates/omp-config.yml.j2` | full file, **mode 0600** (matches live perms). |
 | `~/.omp/agent/models.yml` | `templates/omp-models.yml.j2` | full file, mode 0644. |
 | `~/.config/worktrunk/config.toml` | `files/worktrunk-config.toml` | static copy; the path-template config from the reference doc (`worktree-path = "{{ repo_path }}/../.herdr/worktrees/{{ repo }}/{{ branch \| sanitize }}"`). |
@@ -114,7 +120,7 @@ Templates must reproduce the live files byte-for-byte (modulo trailing newline) 
 
 #### zshrc template (`templates/zshrc.j2`)
 
-Gated additions (use `install_ai_dev_tools | default(false) == true` so the three-valued `"ignore"` correctly removes the lines):
+Gated additions. Gate is `install_ai_dev_tools | default(false) != false`: `false` actively strips the lines, `ignore` leaves them as-is (a template must render deterministically from toggle state; on a fresh machine the undefined toggle defaults to `false`, so nothing renders, and both lines carry runtime guards — `command -v wt`, existing directory — making stray lines harmless):
 
 - PATH: `export PATH="$HOME/.opencode/bin:$PATH"` with the other PATH exports near the top.
 - Near the end, before `zshrc.local` sourcing (reference doc §3):
@@ -145,7 +151,8 @@ Keep the existing 15-minute ansible-pull cron and `@reboot` entry unchanged. Add
 
 ```zsh
 #!/usr/bin/env zsh
-SETUPDIR="${HOME}/.setup"
+# SETUPDIR is overridable via env for testability; cron uses the default.
+SETUPDIR="${SETUPDIR:-${HOME}/.setup}"
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
 cd "$SETUPDIR" || { log "ERROR: $SETUPDIR not found"; exit 1; }
@@ -156,8 +163,19 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 0
 fi
 
+# origin/HEAD is not always set in fresh checkouts; fall back to main.
+REMOTE_HEAD=$(git symbolic-ref --quiet refs/remotes/origin/HEAD || echo refs/remotes/origin/main)
+
+# Guard: never reset over local commits that have not been pushed. A stale
+# remote-tracking ref can only make this over-skip, never under-skip.
+AHEAD=$(git rev-list --count "${REMOTE_HEAD#refs/remotes/}..HEAD" 2>/dev/null || echo 0)
+if [[ -n "$AHEAD" && "$AHEAD" -gt 0 ]]; then
+  log "SKIP: unpushed commits in $SETUPDIR"
+  exit 0
+fi
+
 git fetch origin || { log "ERROR: git fetch failed"; exit 1; }
-git reset --hard origin/HEAD || { log "ERROR: git reset failed"; exit 1; }
+git reset --hard "${REMOTE_HEAD#refs/remotes/}" || { log "ERROR: git reset failed"; exit 1; }
 
 AP=$(which ansible-playbook)
 $AP -i localhost, -c local main.yml
@@ -208,5 +226,6 @@ Modified:
 
 - Installer and skills tasks report no change (`changed_when: false`) by design; real version drift surfaces on the next scheduled run, not as a playbook "change".
 - The repo is public — secret-free status of all committed config was verified at spec time (2026-10-12). If any managed config later gains secrets, move that value to a `~/.setup-options`-supplied var before committing.
-- `git reset --hard origin/HEAD` in the daily script is safe only because of the preceding clean-tree guard; keep the guard first.
+- The daily script's guards (clean tree + no unpushed commits) run before any git mutation; keep that ordering.
+- `install_ai_dev_tools: false` actively removes group-managed files (binaries, configs, keybinding block, plugin link). Skills are the one exception — additive by design and never removed.
 - opencode/omp write some runtime files alongside managed ones; only user-config files are managed, so no clobbering of state.

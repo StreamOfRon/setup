@@ -9,6 +9,11 @@
     dest: "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"
     mode: "0644"
 
+- name: Ensure herdr config directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/herdr"
+    state: directory
+
 # Append-only: herdr's config.toml holds user settings (theme, toasts, sound)
 - name: Manage herdr worktree keybindings
   ansible.builtin.blockinfile:

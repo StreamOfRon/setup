@@ -5,7 +5,8 @@ export PATH="$HOME/.local/bin:$PATH"
 if [[ -d "$HOME/.local/share/default-venv/bin" ]]; then
   export PATH="$HOME/.local/share/default-venv/bin:$PATH"
 fi
-{% if install_ai_dev_tools | default(false) == true %}
+{# Rendered unless the group is actively off; runtime guards make stray lines harmless #}
+{% if install_ai_dev_tools | default(false) != false %}
 export PATH="$HOME/.opencode/bin:$PATH"
 {% endif %}
 
@@ -29,7 +30,7 @@ watch-workflow() {
   gh run watch $(gh run ls -c $(git rev-parse HEAD) --workflow="$1" --json databaseId -q '.[0].databaseId')
 }
 
-{% if install_ai_dev_tools | default(false) == true %}
+{% if install_ai_dev_tools | default(false) != false %}
 # worktrunk shell integration (herdr worktree workflow)
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
 {% endif %}
