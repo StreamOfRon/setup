@@ -1,0 +1,116 @@
+setupVersion: 2
+modelRoles:
+  tiny: apple/on-device
+  smol: apple/on-device
+  plan: opencode-go/kimi-k3:auto
+  web: web/searxng
+  default: litellm/llamaswap/thinkingcap-qwen3.8-27b
+  task: litellm/llamaswap/qwen3.6-35b-a3b
+providers:
+  maxInFlightRequests:
+    litellm: 1
+  tinyModelDevice: mlx
+  tinyModelDtype: default
+searxng:
+  endpoint: https://searxng.int.cshome.link
+astEdit:
+  enabled: false
+debug:
+  enabled: false
+github:
+  enabled: true
+ida:
+  enabled: false
+bash:
+  direnv: auto
+bashInterceptor:
+  enabled: false
+memory:
+  backend: local
+defaultThinkingLevel: auto
+hideThinkingBlock: false
+composer:
+  shape: rule
+  tokenRate: true
+statusLine:
+  preset: nerd
+display:
+  subagentLivePreview: true
+edit:
+  mode: hashline
+inlineToolDescriptors: auto
+browser:
+  headless: true
+plan:
+  autosave: true
+worktree:
+  onExit: remove
+skills:
+  ignoredSkills:
+    - twg
+    - twg-agentic-search
+    - twg-artifacts
+    - twg-code-review
+    - twg-confluence
+    - twg-context-discovery
+    - twg-engineering-work
+    - twg-jira
+    - twg-jira-resolve-merged-work
+    - twg-operational-health
+    - twg-responsibility-routing
+    - twg-space-creation
+    - twg-status-rollups
+autolearn:
+  enabled: false
+modelPresets:
+  local-first:
+    modelRoles:
+      tiny: apple/on-device
+      smol: apple/on-device
+      default: litellm/llamaswap/thinkingcap-qwen3.8-27b
+      plan: opencode-go/kimi-k3:auto
+      web: web/searxng
+      task: litellm/llamaswap/qwen3.6-35b-a3b
+    defaultThinkingLevel: auto
+  glm53:
+    modelRoles:
+      task: litellm/llamaswap/qwen3.6-35b-a3b-mtp
+      tiny: apple/on-device
+      smol: apple/on-device
+      default: opencode-go/glm-5.3-flash
+      advisor: opencode-go/kimi-k3:auto
+      plan: opencode-go/kimi-k3:auto
+      web: web/searxng
+    defaultThinkingLevel: auto
+  qwen38flash:
+    modelRoles:
+      tiny: apple/on-device
+      smol: apple/on-device
+      default: opencode-go/qwen3.8-flash
+      advisor: opencode-go/kimi-k3:auto
+      plan: opencode-go/kimi-k3:auto
+      web: web/searxng
+    defaultThinkingLevel: auto
+tools:
+  intentTracing: false
+includeModelInPrompt: false
+todo:
+  enabled: false
+ask:
+  enabled: true
+web_search:
+  enabled: true
+eval:
+  py: true
+  js: true
+error:
+  notify: "on"
+startup:
+  quiet: true
+power:
+  sleepPrevention: idle
+personality: none
+dev:
+  autoqaConsent: granted
+lsp:
+  lazy: false

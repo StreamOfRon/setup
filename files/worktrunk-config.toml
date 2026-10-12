@@ -1,0 +1,3 @@
+# Worktrees land outside the git root, under the repo's parent directory,
+# so direnv picks up the ~/Work/<type>/.envrc for the pane's environment.
+worktree-path = "{{ repo_path }}/../.herdr/worktrees/{{ repo }}/{{ branch | sanitize }}"

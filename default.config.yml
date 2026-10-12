@@ -74,6 +74,14 @@ dev_gui_casks:
   - font-fira-code-nerd-font
   - visual-studio-code
 
+install_ai_dev_tools: false
+ai_dev_tools_formulae:
+  - herdr
+  - worktrunk
+  - fzf
+  - node
+ai_dev_tools_casks: []
+
 install_common_cli_tools: false
 common_cli_formulae:
   - bitwarden-cli

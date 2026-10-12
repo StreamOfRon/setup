@@ -163,6 +163,17 @@
           ansible.builtin.debug:
             msg: "Failed to manage dev gui tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
+    - name: Manage ai dev tools
+      block:
+        - name: Manage ai dev tools packages
+          ansible.builtin.import_tasks: tasks/ai-dev-tools.yml
+          when:
+            - ansible_facts.pkg_mgr == "homebrew"
+      rescue:
+        - name: Warn about ai dev tools install failure
+          ansible.builtin.debug:
+            msg: "Failed to manage ai dev tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
+
     - name: Manage common cli tools
       block:
         - name: Manage common cli tools packages

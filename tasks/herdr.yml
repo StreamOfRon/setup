@@ -1,0 +1,42 @@
+- name: Ensure worktrunk config directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/worktrunk"
+    state: directory
+
+- name: Manage worktrunk config
+  ansible.builtin.copy:
+    src: files/worktrunk-config.toml
+    dest: "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"
+    mode: "0644"
+
+# Append-only: herdr's config.toml holds user settings (theme, toasts, sound)
+- name: Manage herdr worktree keybindings
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.config/herdr/config.toml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - herdr worktrunk keybindings"
+    block: |
+      # Worktree actions via worktrunk (devashish2203/herdr-worktrunk plugin).
+      # prefix+shift+g overrides herdr's built-in new-worktree action.
+      [[keys.command]]
+      key = "prefix+shift+g"
+      type = "plugin_action"
+      command = "worktrunk.open"
+      description = "Worktree: switch / create from default branch"
+
+      [[keys.command]]
+      key = "prefix+shift+c"
+      type = "plugin_action"
+      command = "worktrunk.open-current"
+      description = "Worktree: switch / create from current branch"
+
+      [[keys.command]]
+      key = "prefix+shift+m"
+      type = "plugin_action"
+      command = "worktrunk.merge"
+      description = "Worktree: merge into the target branch"
+    create: true
+    mode: "0644"
+
+- name: Install herdr-worktrunk plugin
+  ansible.builtin.command: herdr plugin install devashish2203/herdr-worktrunk --yes
+  changed_when: false
