@@ -10,21 +10,24 @@
     env: true
     job: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 
+# The script itself decides full re-apply vs quiet sync from the age of
+# ~/.ansible.last-full-apply, so no flags are needed at the cron level.
 - name: Ansible-pull cron job
   ansible.builtin.cron:
     name: ansible-pull quarter-hourly
     minute: "*/15"
-    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -o >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
 
 - name: Ansible-pull reboot cron
   ansible.builtin.cron:
     name: ansible-pull reboot
     special_time: reboot
-    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh -e ON_REBOOT=true >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
+    job: "{{ lookup('env', 'HOME') }}/.setup/run-ansible-pull.sh >{{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
 
-- name: Ansible daily re-apply cron
+# One-time cleanup: removes the pre-catch-up daily entry, which pointed at
+# run-daily-apply.sh. Safe to delete this task once no machine's crontab
+# contains an "ansible daily re-apply" line anymore.
+- name: Remove legacy daily re-apply cron
   ansible.builtin.cron:
     name: ansible daily re-apply
-    minute: "{{ daily_apply_minute | default('0') }}"
-    hour: "{{ daily_apply_hour | default('3') }}"
-    job: "{{ lookup('env', 'HOME') }}/.setup/run-daily-apply.sh >> {{ lookup('env', 'HOME') }}/.ansible.log 2>&1"
+    state: absent
