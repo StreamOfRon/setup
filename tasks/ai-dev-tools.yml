@@ -15,7 +15,7 @@
 # --- true: install and manage ---
 
 - name: Install opencode via official script
-  ansible.builtin.shell: curl -fsSL https://opencode.ai/install | bash
+  ansible.builtin.shell: curl -fsSL https://opencode.ai/v2/install | bash
   changed_when: false
   when: install_ai_dev_tools | default(false) == true
 
