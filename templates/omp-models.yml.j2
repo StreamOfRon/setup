@@ -4,11 +4,11 @@ providers:
       api: openai-completions
       apiKey: TIINY_API_TOKEN
       models:
-        - id: Qwen/Qwen3.6-35B-A3B
+        - id: Qwen/Qwen3.6-35B-A3B-Turbo
           name: Qwen3.6-35B-A3B
           reasoning: true
           input: [text, image]
-          contextWindow: 131072
+          contextWindow: 262144
           maxTokens: 32768
           cost:
             input: 0
@@ -31,11 +31,11 @@ providers:
       api: openai-completions
       apiKey: TIINY_API_TOKEN
       models:
-        - id: Qwen/Qwen3.6-35B-A3B
+        - id: Qwen/Qwen3.6-35B-A3B-Turbo
           name: Qwen3.6-35B-A3B
           reasoning: true
           input: [text, image]
-          contextWindow: 131072
+          contextWindow: 262144
           maxTokens: 32768
           cost:
             input: 0
