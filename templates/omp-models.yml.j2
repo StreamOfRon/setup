@@ -1,4 +1,58 @@
 providers:
+  tiiny-local:
+      baseUrl: http://api.tiiny/v1
+      api: openai-completions
+      apiKey: TIINY_API_TOKEN
+      models:
+        - id: Qwen/Qwen3.6-35B-A3B-Turbo
+          name: Qwen3.6-35B-A3B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 262144
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
+        - id: Qwen/Qwen3.8-27B
+          name: Qwen3.8-27B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 262144
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
+  tiiny-network:
+      baseUrl: http://tiinyhost/v1
+      api: openai-completions
+      apiKey: TIINY_API_TOKEN
+      models:
+        - id: Qwen/Qwen3.6-35B-A3B-Turbo
+          name: Qwen3.6-35B-A3B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 262144
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
+        - id: Qwen/Qwen3.8-27B
+          name: Qwen3.8-27B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 262144
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
   litellm:
     modelOverrides:
       llamaswap/qwen3.8-27b:
