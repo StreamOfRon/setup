@@ -1,0 +1,113 @@
+---
+# Sanity check: the UNIX HostName should start with the ComputerName.
+#
+# With HostName unset, macOS derives the UNIX hostname from reverse DNS.
+# A stale PTR record can then rename the machine on every DHCP change
+# (e.g. "garnet" turning into "Mac.home.cloudswarm.net"), so HostName is
+# pinned to ComputerName + the DNS search domain whenever it drifts.
+#
+# Config:
+#   hostname_fqdn           - optional explicit FQDN to set (overrides the
+#                             derived "<ComputerName>.<search domain>")
+#   hostname_sanity_check   - set false to skip this file entirely (detection,
+#                             fixup, and drift notifications together)
+
+# Reads use check_mode: false so registered output is available even when
+# the playbook is previewed with --check (skipped tasks leave no stdout).
+- name: Read current UNIX hostname
+  ansible.builtin.command: hostname
+  register: hostname_current
+  changed_when: false
+  check_mode: false
+  when: ansible_system == "Darwin"
+
+- name: Read ComputerName
+  ansible.builtin.command: scutil --get ComputerName
+  register: hostname_computername
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  when: ansible_system == "Darwin"
+
+- name: Look up DNS search domain from resolver config
+  ansible.builtin.command: awk '/^search/{print $2; exit}' /etc/resolv.conf
+  register: hostname_search_domain
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  when: ansible_system == "Darwin"
+
+- name: Normalize facts
+  ansible.builtin.set_fact:
+    hostname_search_domain_value: >-
+      {{ hostname_search_domain.stdout | trim
+         if (hostname_search_domain.rc | default(1)) == 0 else '' }}
+    hostname_computername_value: >-
+      {{ hostname_computername.stdout | trim
+         if (hostname_computername.rc | default(1)) == 0 else '' }}
+  when: ansible_system == "Darwin"
+
+- name: Derive expected FQDN from ComputerName and search domain
+  ansible.builtin.set_fact:
+    hostname_derived_fqdn: >-
+      {{ (hostname_computername_value ~ '.' ~ hostname_search_domain_value)
+         if hostname_search_domain_value else hostname_computername_value }}
+  when:
+    - ansible_system == "Darwin"
+    - hostname_computername_value | length > 0
+
+- name: Pick expected hostname
+  ansible.builtin.set_fact:
+    hostname_expected_fqdn: "{{ (hostname_fqdn | default(hostname_derived_fqdn)) | lower }}"
+  when:
+    - ansible_system == "Darwin"
+    - hostname_computername_value | length > 0
+
+- name: Detect hostname drift
+  ansible.builtin.set_fact:
+    hostname_needs_fix: >-
+      {{ not (hostname_current.stdout | lower
+              is match('(?i)^' ~ (hostname_computername_value | lower | regex_escape))) }}
+  when:
+    - ansible_system == "Darwin"
+    - hostname_computername_value | length > 0
+
+- name: Fix hostname when it drifted
+  become: true
+  when:
+    - ansible_system == "Darwin"
+    - hostname_needs_fix | default(false)
+  block:
+    - name: Set UNIX HostName from ComputerName and search domain
+      ansible.builtin.command:
+        cmd: "scutil --set HostName {{ hostname_expected_fqdn }}"
+      changed_when: true
+      register: hostname_set_result
+      # sudo may be unavailable in unattended runs; the notification below
+      # should still tell the user, so don't let the failure reach rescue.
+      failed_when: false
+
+    - name: Record fixup outcome
+      ansible.builtin.set_fact:
+        hostname_fix_status: >-
+          {{ 'fixed' if (hostname_set_result.rc | default(1)) == 0 else 'failed' }}
+  rescue:
+    - name: Warn about hostname fixup failure
+      ansible.builtin.debug:
+        msg: "Failed to set hostname, continuing: {{ ansible_failed_result | default('unknown error') }}"
+
+- name: Record no-drift status
+  ansible.builtin.set_fact:
+    hostname_fix_status: not-needed
+  when:
+    - ansible_system == "Darwin"
+    - not (hostname_needs_fix | default(false))
+
+# A drifted hostname matters most when nobody is watching a terminal
+# (cron/launchd runs), so surface it in Notification Center. Same gate as
+# detection: sanity check enabled + drift present.
+- name: Notify user about hostname drift
+  ansible.builtin.import_tasks: tasks/notify-hostname-drift.yml
+  when:
+    - ansible_system == "Darwin"
+    - hostname_fix_status | default('not-needed') != 'not-needed'

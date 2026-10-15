@@ -2,6 +2,7 @@
 #   true  - install all apps in the group
 #   false - remove all apps in the group
 #   ignore - skip the group entirely
+hostname_sanity_check: true
 setup_ansible_pull: true
 dotfiles: true
 oh_my_zsh: true

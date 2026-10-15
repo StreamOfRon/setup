@@ -1,0 +1,34 @@
+---
+# GUI notification about hostname drift, with the outcome in the message.
+# Uses osascript, which must be attached to the user's GUI session.
+#
+# The post is wrapped in rescue-with-warning rather than failing the run:
+# a notification that cannot display (SSH session, TCC denial) must not
+# fail the whole daily apply, but it is still surfaced loudly
+# (WARNING/rescued=1), never dropped silently.
+#
+# Expects (from tasks/hostname.yml):
+#   hostname_fix_status      - fixed | failed | not-needed
+#   hostname_current.stdout  - hostname as found before the fixup
+#   hostname_expected_fqdn   - FQDN the sanity check pins
+- name: Compose drift notification message
+  ansible.builtin.set_fact:
+    hostname_notify_message: >-
+      {{ ('UNIX HostName corrected to ' ~ hostname_expected_fqdn)
+         if hostname_fix_status == 'fixed' else
+         ('UNIX HostName is ' ~ (hostname_current.stdout | trim) ~
+          '; fix with: sudo scutil --set HostName ' ~ hostname_expected_fqdn) }}
+
+- name: Post drift notification
+  block:
+    - name: Post drift notification via osascript
+      ansible.builtin.command:
+        argv:
+          - osascript
+          - -e
+          - 'display notification "{{ hostname_notify_message }}" with title "Hostname drift ({{ hostname_fix_status }})"'
+      changed_when: false
+  rescue:
+    - name: Warn about notification failure
+      ansible.builtin.debug:
+        msg: "Failed to post drift notification, continuing: {{ ansible_failed_result | default('unknown error') }}"
