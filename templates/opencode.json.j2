@@ -160,31 +160,8 @@
         "baseURL": "http://api.tiiny/v1",
         "apiKey": "{env:TIINY_API_TOKEN}"
       },
-      "models": {
-        "Qwen/Qwen3.6-35B-A3B-Turbo": {
-          "name": "Qwen3.6-35B-A3B",
-          "reasoning": true,
-          "limit": {
-            "context": 262144,
-            "output": 32768
-          }
-        },
-        "Qwen/Qwen3.8-27B": {
-          "name": "Qwen3.8-27B",
-          "reasoning": true,
-          "limit": {
-            "context": 262144,
-            "output": 32768
-          }
-        }
-      }
-    },
-    "tiiny-network": {
-      "name": "Tiiny Network",
-      "package": "aisdk:@ai-sdk/openai-compatible",
-      "settings": {
-        "baseURL": "http://tiinyhost/v1",
-        "apiKey": "{env:TIINY_API_TOKEN}"
+      "body": {
+        "temperature": 0.6
       },
       "models": {
         "Qwen/Qwen3.6-35B-A3B-Turbo": {
@@ -200,6 +177,51 @@
           "reasoning": true,
           "limit": {
             "context": 262144,
+            "output": 32768
+          }
+        },
+        "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
+          "name": "Ornith-1.5-35B-A3B",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        }
+      }
+    },
+    "tiiny-network": {
+      "name": "Tiiny Network",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://tiinyhost/v1",
+        "apiKey": "{env:TIINY_API_TOKEN}"
+      },
+      "body": {
+        "temperature": 0.6
+      },
+      "models": {
+        "Qwen/Qwen3.6-35B-A3B-Turbo": {
+          "name": "Qwen3.6-35B-A3B",
+          "reasoning": true,
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen/Qwen3.8-27B": {
+          "name": "Qwen3.8-27B",
+          "reasoning": true,
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
+          "name": "Ornith-1.5-35B-A3B",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
             "output": 32768
           }
         }

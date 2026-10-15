@@ -1,5 +1,7 @@
 providers:
   tiiny-local:
+      # Want: per-provider temperature 0.6 (opencode sets body: {temperature: 0.6});
+      # omp has no per-provider temperature as of 18.11.0 - add it here if/when supported.
       baseUrl: http://api.tiiny/v1
       api: openai-completions
       apiKey: TIINY_API_TOKEN
@@ -26,7 +28,20 @@ providers:
             output: 0
             cacheRead: 0
             cacheWrite: 0
+        - id: ornith-ai/Ornith-1.5-35B-A3B-Turbo
+          name: Ornith-1.5-35B-A3B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 131072
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
   tiiny-network:
+      # Want: per-provider temperature 0.6 (opencode sets body: {temperature: 0.6});
+      # omp has no per-provider temperature as of 18.11.0 - add it here if/when supported.
       baseUrl: http://tiinyhost/v1
       api: openai-completions
       apiKey: TIINY_API_TOKEN
@@ -47,6 +62,17 @@ providers:
           reasoning: true
           input: [text, image]
           contextWindow: 262144
+          maxTokens: 32768
+          cost:
+            input: 0
+            output: 0
+            cacheRead: 0
+            cacheWrite: 0
+        - id: ornith-ai/Ornith-1.5-35B-A3B-Turbo
+          name: Ornith-1.5-35B-A3B
+          reasoning: true
+          input: [text, image]
+          contextWindow: 131072
           maxTokens: 32768
           cost:
             input: 0
