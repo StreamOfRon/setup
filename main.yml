@@ -32,6 +32,10 @@
           when: ansible_facts.pkg_mgr == "homebrew"
 
   tasks:
+    - name: Configure hostname sanity check
+      ansible.builtin.import_tasks: tasks/hostname.yml
+      when: hostname_sanity_check | default(true)
+
     - name: Configure ansible-pull cron jobs
       ansible.builtin.import_tasks: tasks/ansible-pull-cron.yml
       when: setup_ansible_pull
