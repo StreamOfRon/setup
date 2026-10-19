@@ -271,4 +271,8 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+### Worktrunk ###
+# Git worktrees created by worktrunk (managed via .worktrees/ inside each repo)
+.worktrees/
+
 # End of https://www.toptal.com/developers/gitignore/api/linux,python,terraform,macos,ansible,git
