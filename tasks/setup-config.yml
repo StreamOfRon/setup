@@ -1,0 +1,23 @@
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: Check for setup-config in the managed checkout
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.setup/setup-config"
+  register: setup_config_source
+
+- name: Link setup-config into ~/.local/bin
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/.setup/setup-config"
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/setup-config"
+    state: link
+    force: true
+  when: setup_config_source.stat.exists
+
+- name: Warn when setup-config is missing from the managed checkout
+  ansible.builtin.debug:
+    msg: "~/.setup/setup-config not found; run ansible-pull to populate ~/.setup."
+  when: not setup_config_source.stat.exists

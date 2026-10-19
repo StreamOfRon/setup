@@ -1,0 +1,192 @@
+{
+  "categories": [
+    {
+      "id": "groups",
+      "label": "Package groups",
+      "items": [
+        {
+          "key": "install_sync_tools",
+          "label": "Sync tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["sync_formulae", "sync_casks"]
+        },
+        {
+          "key": "install_misc_apps",
+          "label": "Misc apps",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["misc_formulae", "misc_casks"]
+        },
+        {
+          "key": "install_entertainment_apps",
+          "label": "Entertainment apps",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["entertainment_formulae", "entertainment_casks"]
+        },
+        {
+          "key": "install_media_tools",
+          "label": "Media tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["media_formulae", "media_casks"]
+        },
+        {
+          "key": "install_kube_apps",
+          "label": "Kubernetes tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["kube_taps", "kube_formulae", "kube_casks"]
+        },
+        {
+          "key": "install_dev_cli_tools",
+          "label": "Dev CLI tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["dev_cli_formulae", "dev_cli_casks"]
+        },
+        {
+          "key": "install_dev_gui_tools",
+          "label": "Dev GUI tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["dev_gui_formulae", "dev_gui_casks"]
+        },
+        {
+          "key": "install_ai_dev_tools",
+          "label": "AI dev tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["ai_dev_tools_formulae", "ai_dev_tools_casks"],
+          "extras": ["opencode", "omp", "managed opencode/omp/herdr configs", "agent skills"],
+          "removals": ["opencode", "omp", "managed opencode/omp/herdr configs"]
+        },
+        {
+          "key": "install_common_cli_tools",
+          "label": "Common CLI tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["common_cli_formulae", "common_cli_casks"]
+        },
+        {
+          "key": "install_aws_tools",
+          "label": "AWS tools",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["aws_formulae", "aws_casks"]
+        },
+        {
+          "key": "install_other_apps",
+          "label": "Other packages",
+          "type": "tristate",
+          "requires": "homebrew",
+          "lists": ["install_other_formulae", "install_other_casks"]
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "label": "System & shell",
+      "items": [
+        {
+          "key": "hostname_sanity_check",
+          "label": "Hostname sanity check",
+          "type": "bool"
+        },
+        {
+          "key": "setup_ansible_pull",
+          "label": "Ansible-pull cron jobs",
+          "type": "bool"
+        },
+        {
+          "key": "dotfiles",
+          "label": "Dotfiles",
+          "type": "bool"
+        },
+        {
+          "key": "oh_my_zsh",
+          "label": "Oh My Zsh + powerlevel10k",
+          "type": "bool"
+        },
+        {
+          "key": "agent_python",
+          "label": "Agent Python venv",
+          "type": "bool",
+          "lists": ["agent_python_packages"]
+        },
+        {
+          "key": "agent_python_venv",
+          "label": "Agent Python venv path",
+          "type": "string"
+        },
+        {
+          "key": "vscode",
+          "label": "VS Code settings",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "macos",
+      "label": "macOS apps",
+      "items": [
+        {
+          "key": "mac_app_store",
+          "label": "Mac App Store management",
+          "type": "bool",
+          "requires": "darwin",
+          "lists": ["install_mas_apps", "remove_mas_apps"]
+        },
+        {
+          "key": "install_apple_office",
+          "label": "Apple Office apps",
+          "type": "bool",
+          "requires": "darwin"
+        },
+        {
+          "key": "install_garageband",
+          "label": "GarageBand",
+          "type": "bool",
+          "requires": "darwin"
+        },
+        {
+          "key": "install_imovie",
+          "label": "iMovie",
+          "type": "bool",
+          "requires": "darwin"
+        }
+      ]
+    }
+  ],
+  "package_keys": [
+    "agent_python_packages",
+    "install_mas_apps",
+    "remove_mas_apps",
+    "sync_formulae",
+    "sync_casks",
+    "misc_formulae",
+    "misc_casks",
+    "entertainment_formulae",
+    "entertainment_casks",
+    "media_formulae",
+    "media_casks",
+    "kube_taps",
+    "kube_formulae",
+    "kube_casks",
+    "dev_cli_formulae",
+    "dev_cli_casks",
+    "dev_gui_formulae",
+    "dev_gui_casks",
+    "ai_dev_tools_formulae",
+    "ai_dev_tools_casks",
+    "common_cli_formulae",
+    "common_cli_casks",
+    "aws_formulae",
+    "aws_casks",
+    "install_other_formulae",
+    "install_other_casks",
+    "remove_other_formulae",
+    "remove_other_casks"
+  ]
+}

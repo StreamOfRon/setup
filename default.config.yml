@@ -47,6 +47,7 @@ media_casks:
   - makemkv
 
 install_kube_apps: false
+kube_taps: []
 kube_formulae:
   - argocd
   - kubernetes-cli

@@ -1,0 +1,936 @@
+#!/usr/bin/env python3
+"""Curses configuration tool for the workstation setup playbook."""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+
+REPO_ROOT = Path(__file__).resolve().parent
+DEFAULT_CONFIG = REPO_ROOT / "default.config.yml"
+MENU_FILE = REPO_ROOT / "setup-config-menu.json"
+PREFERENCES = Path.home() / ".setup-options"
+
+KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):(?:\s*(.*))?$")
+HOME_FORMULA_RE = re.compile(r"\{\{\s*lookup\('env',\s*'HOME'\)\s*\}\}")
+
+
+class ToolError(Exception):
+    """User-facing setup-config error."""
+
+
+@dataclass(frozen=True)
+class ListItem:
+    value: str
+    comment: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class UnsupportedValue:
+    raw: str
+
+
+@dataclass
+class Block:
+    key: Optional[str]
+    lines: List[str]
+
+
+@dataclass(frozen=True)
+class MenuItem:
+    key: str
+    label: str
+    summary: str
+    kind: str
+    requires: Optional[str] = None
+    lists: Tuple[str, ...] = ()
+    extras: Tuple[str, ...] = ()
+    removals: Tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Category:
+    id: str
+    label: str
+    items: Tuple[MenuItem, ...]
+
+
+@dataclass(frozen=True)
+class Menu:
+    categories: Tuple[Category, ...]
+    package_keys: Tuple[str, ...]
+
+
+class ConfigError(ToolError):
+    """Error during config file operations."""
+
+
+PREFERENCES_HEADER = (
+    "# Local overrides for the workstation setup playbook.\n"
+    "# Managed by setup-config; unmanaged keys are preserved.\n"
+)
+
+
+def _render_key_lines(key: str, value) -> List[str]:
+    """Render a key-value pair as YAML lines."""
+    if isinstance(value, bool):
+        return [f"{key}: {'true' if value else 'false'}"]
+    if value == "ignore":
+        return [f"{key}: ignore"]
+    if isinstance(value, list):
+        lines = [f"{key}:"]
+        for item in value:
+            if isinstance(item, ListItem):
+                comment = f" # {item.comment}" if item.comment else ""
+                lines.append(f"  - {item.value}{comment}")
+            else:
+                # Simple string item
+                try:
+                    import json as _json
+                    dumped = _json.dumps(item)
+                    if dumped.startswith('"') and dumped.endswith('"'):
+                        # It's a simple string, use as-is
+                        lines.append(f"  - {item}")
+                    else:
+                        lines.append(f"  - {item}")
+                except (TypeError, ValueError):
+                    lines.append(f"  - {item}")
+        return lines
+    if isinstance(value, str):
+        return [f"{key}: {json.dumps(value)}"]
+    raise ConfigError(f"{key}: unsupported value type")
+
+
+def update_preferences_text(text: str, desired: Mapping[str, object],
+                             remove: Iterable[str]) -> str:
+    """Return text with only the desired top-level keys replaced/added/removed."""
+    remove_set = set(remove)
+    desired_keys = set(desired.keys())
+    blocks = split_blocks(text)
+    output_lines: List[str] = []
+    handled_keys: set = set()
+
+    for block in blocks:
+        if block.key is None:
+            # Trivia block: copy verbatim
+            output_lines.extend(block.lines)
+            continue
+        key = block.key
+        if key in remove_set:
+            # Skip removed keys
+            handled_keys.add(key)
+            continue
+        if key in desired_keys:
+            # Replace with rendered lines
+            output_lines.extend(_render_key_lines(key, desired[key]))
+            handled_keys.add(key)
+            continue
+        # Unknown or unchanged key: copy verbatim
+        output_lines.extend(block.lines)
+
+    # Append any desired keys not handled
+    for key in desired_keys:
+        if key not in handled_keys:
+            if output_lines and output_lines[-1].strip() != '':
+                output_lines.append('')
+            output_lines.extend(_render_key_lines(key, desired[key]))
+
+    # Join, strip trailing blank lines, end with exactly one newline
+    result = '\n'.join(output_lines)
+    result = re.sub(r'\n+[ \t]*$', '\n', result)
+    if not result.endswith('\n'):
+        result += '\n'
+    return result
+
+
+def write_preferences(path: Path, new_text: str, old_text: str) -> None:
+    """Write text to path atomically, creating .bak from old content."""
+    if old_text and path.exists():
+        bak_path = path.with_name(path.name + ".bak")
+        try:
+            import shutil as _shutil
+            _shutil.copy2(str(path), str(bak_path))
+        except OSError:
+            pass  # .bak is best-effort
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mode = 0o644
+    if path.exists():
+        import stat as _stat
+        mode = _stat.S_IMODE(path.stat().st_mode)
+
+    import tempfile as _tempfile
+    import os as _os
+    fd, tmp = _tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, 'w') as f:
+            f.write(new_text)
+            f.flush()
+            _os.fsync(f.fileno())
+        _os.chmod(tmp, mode)
+        _os.replace(tmp, str(path))
+    except Exception as exc:
+        try:
+            _os.unlink(tmp)
+        except OSError:
+            pass
+        raise ConfigError(f"could not write {path}: {exc}")
+
+
+class Config:
+    """Manages ~/.setup-options with minimal-override writes."""
+
+    def __init__(self, defaults_path: Path, prefs_path: Path,
+                 package_keys: Sequence[str],
+                 tristate_keys: Sequence[str] = ()):
+        self._defaults_path = defaults_path
+        self._prefs_path = prefs_path
+        self._package_keys = tuple(package_keys)
+        self._tristate_keys = set(tristate_keys)
+        self._defaults: Dict[str, object] = {}
+        self._overrides: Dict[str, object] = {}
+        self._prefs_text: str = ""
+        self.reload()
+
+    def reload(self) -> None:
+        """Reload defaults and current overrides from disk."""
+        if not self._defaults_path.exists():
+            raise ConfigError(f"default config not found: {self._defaults_path}")
+        try:
+            self._defaults = parse_yaml_subset(self._defaults_path.read_text())
+        except Exception as e:
+            raise ConfigError(f"could not read defaults: {e}")
+        if self._prefs_path.exists():
+            try:
+                self._prefs_text = self._prefs_path.read_text()
+            except OSError as e:
+                raise ConfigError(f"could not read preferences: {e}")
+        else:
+            self._prefs_text = ""
+        self._overrides = {}
+        if self._prefs_text:
+            prefs_data = parse_yaml_subset(self._prefs_text)
+            for key in self._defaults:
+                if key in prefs_data:
+                    self._overrides[key] = prefs_data[key]
+
+    def effective(self, key: str) -> object:
+        """Return the effective value for a key (override or default)."""
+        if key in self._overrides:
+            return self._overrides[key]
+        return self._defaults.get(key)
+
+    def source(self, key: str) -> str:
+        """Return 'override' or 'default'."""
+        return "override" if key in self._overrides else "default"
+
+    def set(self, key: str, value) -> bool:
+        """Set a key to a value. Returns True if the file changed."""
+        # Validate key exists in defaults
+        if key not in self._defaults:
+            raise ConfigError(f"unknown key: {key}")
+        # Check effective value is not UnsupportedValue
+        eff = self.effective(key)
+        if isinstance(eff, UnsupportedValue):
+            raise ConfigError(f"key '{key}' has unsupported value, cannot edit")
+        # Check new value is not UnsupportedValue
+        if isinstance(value, UnsupportedValue):
+            raise ConfigError(f"cannot set key '{key}' to unsupported value")
+        # Type validation based on default value and tristate_keys
+        default_val = self._defaults[key]
+        if key in self._tristate_keys:
+            if not (isinstance(value, bool) or value == "ignore"):
+                raise ConfigError(f"tristate key '{key}': expected bool or 'ignore'")
+        elif isinstance(default_val, bool):
+            if not isinstance(value, bool):
+                raise ConfigError(f"bool key '{key}': expected bool")
+        elif isinstance(default_val, str):
+            if not isinstance(value, str):
+                raise ConfigError(f"string key '{key}': expected str")
+
+        # Check if value equals current effective value
+        if value == eff:
+            return False
+
+        # Compute desired overrides
+        default_val = self._defaults[key]
+        to_set: Dict[str, object] = {}
+        to_remove: List[str] = []
+
+        if value == default_val:
+            # Returning to default: remove the override
+            to_remove = [key]
+        else:
+            to_set = {key: value}
+
+        # Compute new text
+        new_text = update_preferences_text(self._prefs_text, to_set, to_remove)
+
+        # Check if text actually changed
+        if new_text == self._prefs_text:
+            return False
+
+        # Prepend header if file is new
+        if not self._prefs_text.strip():
+            new_text = PREFERENCES_HEADER + new_text
+
+        # Write
+        write_preferences(self._prefs_path, new_text, self._prefs_text)
+        self._prefs_text = new_text
+        # Update overrides
+        if to_set:
+            self._overrides[key] = to_set[key]
+        if to_remove and key in self._overrides:
+            del self._overrides[key]
+
+        return True
+
+    def reset(self, key: str) -> bool:
+        """Reset a key to its default value. Returns True if file changed."""
+        if key not in self._overrides:
+            return False
+        to_remove = [key]
+        new_text = update_preferences_text(self._prefs_text, {}, to_remove)
+        if new_text == self._prefs_text:
+            return False
+        if not self._prefs_text.strip():
+            new_text = PREFERENCES_HEADER + new_text
+        write_preferences(self._prefs_path, new_text, self._prefs_text)
+        self._prefs_text = new_text
+        del self._overrides[key]
+        return True
+
+    def package_overrides(self) -> List[Tuple[str, object]]:
+        """Return list of (key, value) for package key overrides."""
+        return [(k, self._overrides[k]) for k in self._package_keys if k in self._overrides]
+
+    def clear_package_overrides(self) -> List[str]:
+        """Remove all package key overrides in one write. Returns removed key names."""
+        keys_to_remove = [k for k in self._package_keys if k in self._overrides]
+        if not keys_to_remove:
+            return []
+        new_text = update_preferences_text(self._prefs_text, {}, keys_to_remove)
+        write_preferences(self._prefs_path, new_text, self._prefs_text)
+        self._prefs_text = new_text
+        for k in keys_to_remove:
+            self._overrides.pop(k, None)
+        return keys_to_remove
+
+    def unsupported_keys(self) -> List[str]:
+        """Return sorted keys whose effective value is UnsupportedValue."""
+        result = []
+        for key in sorted(self._defaults.keys()):
+            eff = self.effective(key)
+            if isinstance(eff, UnsupportedValue):
+                result.append(key)
+        return result
+
+    @property
+    def defaults(self) -> Dict[str, object]:
+        """Expose defaults for external use."""
+        return self._defaults
+
+
+def split_blocks(text: str) -> List[Block]:
+    """Split text into key blocks and trivia (blank/comment) blocks."""
+    # Strip trailing newline to avoid spurious empty block at end
+    text = text.rstrip('\n')
+    blocks: List[Block] = []
+    current_block: Optional[Block] = None
+    current_is_trivia = False
+
+    for line in text.split('\n'):
+        # Check for a top-level key line (column 0, valid key name, colon)
+        m = KEY_RE.match(line)
+        if m and not line[0].isspace():
+            # Save previous block and start a new key block
+            if current_block is not None:
+                blocks.append(current_block)
+            current_block = Block(key=m.group(1), lines=[line])
+            current_is_trivia = False
+            continue
+
+        is_blank = line == ''
+        is_comment = line.startswith('#') and not line[0].isspace() and line.strip()
+
+        if is_blank:
+            if current_block is None:
+                continue  # Skip leading blank lines
+            if current_is_trivia:
+                current_block.lines.append(line)
+            else:
+                blocks.append(current_block)
+                current_block = Block(key=None, lines=[line])
+                current_is_trivia = True
+            continue
+
+        if is_comment:
+            if current_block is None:
+                # First line is a comment: start trivia block
+                current_block = Block(key=None, lines=[line])
+                current_is_trivia = True
+            elif current_is_trivia:
+                current_block.lines.append(line)
+            else:
+                blocks.append(current_block)
+                current_block = Block(key=None, lines=[line])
+                current_is_trivia = True
+            continue
+
+        # Indented line: add to current block
+        if line.startswith(' ') or line.startswith('\t'):
+            if current_block is not None:
+                current_block.lines.append(line)
+            continue
+
+        # Unknown line: add to current block
+        if current_block is not None:
+            current_block.lines.append(line)
+
+    if current_block is not None:
+        blocks.append(current_block)
+
+    return blocks
+
+
+def _strip_inline_comment(value: str) -> str:
+    """Strip inline # comment only when # is outside quotes and preceded by whitespace."""
+    in_quote = False
+    quote_char = None
+    for i, ch in enumerate(value):
+        if in_quote:
+            if ch == quote_char:
+                in_quote = False
+        else:
+            if ch in ('"', "'"):
+                in_quote = True
+                quote_char = ch
+            elif ch == '#' and i > 0 and value[i - 1] == ' ':
+                return value[:i].rstrip()
+    return value
+
+
+def _parse_scalar(raw: str):
+    """Parse a scalar YAML value."""
+    raw = raw.strip()
+    if not raw:
+        return None
+    # Quoted string
+    if (raw.startswith('"') and raw.endswith('"')) or \
+       (raw.startswith("'") and raw.endswith("'")):
+        return raw[1:-1]
+    # Boolean
+    if raw == 'true':
+        return True
+    if raw == 'false':
+        return False
+    # Null
+    if raw in ('null', '~'):
+        return None
+    # Strip inline comments
+    raw = _strip_inline_comment(raw)
+    raw = raw.strip()
+    # Keep as string
+    return raw
+
+
+def _parse_flow_list(text: str):
+    """Parse a flow list like [a, b] or []. Returns List[ListItem]."""
+    inner = text.strip().strip('[]').strip()
+    if not inner:
+        return []
+    items = [s.strip() for s in inner.split(',')]
+    return [ListItem(value=item, comment=None) for item in items]
+
+
+def _parse_block_list(lines: List[str]):
+    """Parse block-style list lines (starting with '  - ')."""
+    items = []
+    for line in lines[1:]:  # skip the key line itself
+        line = line.strip()
+        if line.startswith('- '):
+            item_text = line[2:].strip()
+            comment = None
+            # Check for inline comment
+            comment_match = re.search(r'\s+#\s+(.+)$', item_text)
+            if comment_match:
+                comment = comment_match.group(1).strip()
+                item_text = item_text[:comment_match.start()].strip()
+            items.append(ListItem(value=item_text, comment=comment))
+        elif line.startswith('-'):
+            # Empty list item marker
+            pass
+    return items
+
+
+def parse_yaml_subset(text: str) -> Dict[str, object]:
+    """Parse a YAML subset into a dictionary of values."""
+    blocks = split_blocks(text)
+    result: Dict[str, object] = {}
+
+    for block in blocks:
+        if block.key is None:
+            # Trivia block, skip
+            continue
+
+        key = block.key
+        lines = block.lines
+
+        # First line is the key line: "key: value" or "key:"
+        first_line = lines[0]
+        m = KEY_RE.match(first_line)
+        if not m:
+            continue
+
+        value_part = m.group(2) if m.group(2) is not None else ''
+        value_part = value_part.strip()
+
+        # Check for flow list on the key line
+        if value_part.startswith('['):
+            result[key] = _parse_flow_list(value_part)
+            continue
+
+        # Empty value part: could be a block list or unsupported
+        if not value_part:
+            continuation_lines = lines[1:]
+            if continuation_lines and all(
+                cl.strip().startswith('- ') or cl.strip() == '-' for cl in continuation_lines
+            ):
+                # Block-style list
+                result[key] = _parse_block_list(lines)
+            else:
+                # Unsupported nested mapping
+                raw_text = '\n'.join(block.lines)
+                result[key] = UnsupportedValue(raw_text)
+            continue
+
+        # Non-empty value part: scalar
+        value_part = _strip_inline_comment(value_part)
+        result[key] = _parse_scalar(value_part)
+
+    return result
+
+
+def load_menu(path: Path, defaults: Mapping[str, object]) -> Menu:
+    """Load menu from JSON file and validate against defaults."""
+    try:
+        with open(path, 'r') as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        raise ToolError(f"{path}: malformed menu metadata — {e}")
+
+    categories = []
+    for cat_data in data.get("categories", []):
+        items = []
+        for item_data in cat_data.get("items", []):
+            item = MenuItem(
+                key=item_data["key"],
+                label=item_data.get("label", item_data["key"]),
+                summary=item_data.get("summary", ""),
+                kind=item_data.get("type", "bool"),
+                requires=item_data.get("requires"),
+                lists=tuple(item_data.get("lists", [])),
+                extras=tuple(item_data.get("extras", [])),
+                removals=tuple(item_data.get("removals", [])),
+            )
+            items.append(item)
+        cat = Category(
+            id=cat_data["id"],
+            label=cat_data.get("label", cat_data["id"]),
+            items=tuple(items),
+        )
+        categories.append(cat)
+
+    package_keys = tuple(data.get("package_keys", []))
+    menu = Menu(categories=tuple(categories), package_keys=package_keys)
+
+    errors = validate_menu(menu, defaults)
+    if errors:
+        raise ToolError("\n".join(errors))
+
+    return menu
+
+
+def validate_menu(menu: Menu, defaults: Mapping[str, object]) -> List[str]:
+    """Validate menu structure against defaults. Returns list of error strings."""
+    errors: List[str] = []
+
+    # Check at least one category exists
+    if not menu.categories:
+        errors.append("menu has no categories")
+        return errors
+
+    # Check category ids are unique
+    cat_ids = [c.id for c in menu.categories]
+    seen_cat_ids = set()
+    for cid in cat_ids:
+        if cid in seen_cat_ids:
+            errors.append(f"duplicate category id: {cid}")
+        seen_cat_ids.add(cid)
+
+    # Check every category has at least one item
+    for cat in menu.categories:
+        if not cat.items:
+            errors.append(f"category '{cat.id}' has no items")
+
+    # Check item keys are unique and exist in defaults
+    seen_item_keys = set()
+    for cat in menu.categories:
+        for item in cat.items:
+            if item.key in seen_item_keys:
+                errors.append(f"duplicate item key: {item.key}")
+            seen_item_keys.add(item.key)
+            if item.key not in defaults:
+                errors.append(f"unknown key in menu: {item.key}")
+
+    # Check kind values
+    valid_kinds = {"tristate", "bool", "string"}
+    for cat in menu.categories:
+        for item in cat.items:
+            if item.kind not in valid_kinds:
+                errors.append(f"item '{item.key}': invalid kind '{item.kind}'")
+            # Check default value matches kind
+            if item.key in defaults:
+                val = defaults[item.key]
+                if item.kind == "bool":
+                    if not isinstance(val, bool):
+                        errors.append(f"item '{item.key}': type mismatch, expected bool")
+                elif item.kind == "string":
+                    if not isinstance(val, str):
+                        errors.append(f"item '{item.key}': type mismatch, expected str")
+                elif item.kind == "tristate":
+                    if not (isinstance(val, bool) or val == "ignore" or val is None):
+                        errors.append(f"item '{item.key}': type mismatch, expected bool or 'ignore'")
+
+    # Check requires values
+    valid_requires = {None, "homebrew", "darwin"}
+    for cat in menu.categories:
+        for item in cat.items:
+            if item.requires not in valid_requires:
+                errors.append(f"item '{item.key}': invalid requires '{item.requires}'")
+
+    # Check lists, extras, removals are arrays of strings
+    for cat in menu.categories:
+        for item in cat.items:
+            if not isinstance(item.lists, (tuple, list)):
+                errors.append(f"item '{item.key}': 'lists' must be an array")
+            if not isinstance(item.extras, (tuple, list)):
+                errors.append(f"item '{item.key}': 'extras' must be an array")
+            if not isinstance(item.removals, (tuple, list)):
+                errors.append(f"item '{item.key}': 'removals' must be an array")
+
+    # Check package_keys entries exist in defaults and are lists
+    for pk in menu.package_keys:
+        if pk not in defaults:
+            errors.append(f"package_keys entry '{pk}' not in defaults")
+        else:
+            val = defaults[pk]
+            if not isinstance(val, list):
+                errors.append(f"package_keys entry '{pk}' is not a list in defaults")
+
+    # Check every lists key is in package_keys and is a list in defaults
+    for cat in menu.categories:
+        for item in cat.items:
+            for lk in item.lists:
+                if lk not in menu.package_keys:
+                    errors.append(f"item '{item.key}': list key '{lk}' not in package_keys")
+                elif lk in defaults:
+                    if not isinstance(defaults[lk], list):
+                        errors.append(f"item '{item.key}': list key '{lk}' is not a list in defaults")
+
+    # Check agent_python_packages, install_mas_apps, remove_mas_apps are in package_keys
+    required_package_keys = {"agent_python_packages", "install_mas_apps", "remove_mas_apps"}
+    for rpk in required_package_keys:
+        if rpk not in menu.package_keys:
+            errors.append(f"required package key '{rpk}' not in package_keys")
+
+    return errors
+
+
+def build_apply_command(executable: str) -> List[str]:
+    """Build the ansible-playbook command list."""
+    return [executable, "-i", "localhost,", "-c", "local", "main.yml"]
+
+
+def find_ansible_playbook(which=shutil.which, is_executable=os.access) -> Optional[str]:
+    """Find the ansible-playbook executable."""
+    path = which("ansible-playbook")
+    if path:
+        return path
+    candidates = [
+        "/opt/homebrew/bin/ansible-playbook",
+        "/usr/local/bin/ansible-playbook",
+        "/usr/bin/ansible-playbook",
+        "/home/linuxbrew/.linuxbrew/bin/ansible-playbook",
+    ]
+    for c in candidates:
+        if is_executable(c, os.X_OK):
+            return c
+    return None
+
+
+def apply_playbook(repo_root: Path, *, runner=None, which=shutil.which,
+                   is_executable=os.access, out=None) -> int:
+    """Run the ansible playbook. Returns exit code."""
+    if out is None:
+        out = print
+
+    # Check for main.yml
+    if not (repo_root / "main.yml").is_file():
+        out(f"setup-config: main.yml not found in {repo_root}")
+        return 1
+
+    # Find ansible-playbook
+    ansible_path = find_ansible_playbook(which, is_executable)
+    if not ansible_path:
+        out("setup-config: ansible-playbook not found. "
+           "Install it or ensure it is on PATH.")
+        return 127
+
+    cmd = build_apply_command(ansible_path)
+    out(f"Running: {' '.join(cmd)}")
+    out(f"Directory: {repo_root}")
+
+    if runner is None:
+        try:
+            result = subprocess.run(cmd, cwd=str(repo_root), check=False)
+            return result.returncode
+        except OSError as exc:
+            out(f"setup-config: could not run ansible-playbook: {exc}")
+            return 127
+    else:
+        result = runner(cmd, cwd=str(repo_root), check=False)
+        return result.returncode
+
+
+TRISTATE_VALUES = (True, "ignore", False)
+
+
+def cycle_tristate(value) -> object:
+    """Cycle through tristate values: True -> ignore -> False -> True."""
+    for i, v in enumerate(TRISTATE_VALUES):
+        if v == value:
+            return TRISTATE_VALUES[(i + 1) % len(TRISTATE_VALUES)]
+    return TRISTATE_VALUES[0]  # Start at True for unexpected values
+
+
+def status_label(value) -> str:
+    """Return ON, SKIP, or OFF for tristate/bool values."""
+    if value is True:
+        return "ON"
+    if value == "ignore":
+        return "SKIP"
+    if value is False:
+        return "OFF"
+    return str(value)
+
+
+def list_label(key: str) -> str:
+    """Map list key suffix to a human-readable label."""
+    if key.endswith("_formulae"):
+        return "Formulae"
+    if key.endswith("_casks"):
+        return "Casks"
+    if key.endswith("_taps"):
+        return "Taps"
+    if key == "agent_python_packages":
+        return "Python packages"
+    if key == "install_mas_apps":
+        return "Install (MAS)"
+    if key == "remove_mas_apps":
+        return "Remove (MAS)"
+    return "Packages"
+
+
+def format_list(items) -> str:
+    """Format a list of ListItem values."""
+    if not items:
+        return "(empty)"
+    if isinstance(items, list):
+        parts = []
+        for item in items:
+            if isinstance(item, ListItem):
+                s = item.value
+                if item.comment:
+                    s += f" ({item.comment})"
+                parts.append(s)
+            else:
+                parts.append(str(item))
+        return ", ".join(parts)
+    return "(unparsed)"
+
+
+def expand_home_formula(value: str) -> str:
+    """Expand {{ lookup('env', 'HOME') }} and ~ in a path string."""
+    home = str(Path.home())
+    result = HOME_FORMULA_RE.sub(home, value)
+    if result.startswith("~/"):
+        result = home + result[1:]
+    return result
+
+
+def normalize_venv_path(value: str) -> str:
+    """Normalize a venv path: expand ~, reject relative paths."""
+    value = value.strip()
+    if not value:
+        raise ToolError("empty venv path")
+    expanded = expand_home_formula(value)
+    if not os.path.isabs(expanded):
+        raise ToolError(f"relative venv path: {value}")
+    return os.path.normpath(expanded)
+
+
+def save_venv_value(config, raw: str) -> bool:
+    """Save a venv path, or reset to default if it matches."""
+    normalized = normalize_venv_path(raw)
+    default_expanded = expand_home_formula(str(config.defaults.get("agent_python_venv", "")))
+    if normalized == default_expanded:
+        return config.reset("agent_python_venv")
+    return config.set("agent_python_venv", normalized)
+
+
+def homebrew_available(which=shutil.which, is_executable=os.access) -> bool:
+    """Check if homebrew is available."""
+    if which("brew"):
+        return True
+    for path in ["/opt/homebrew/bin/brew", "/usr/local/bin/brew",
+                 "/home/linuxbrew/.linuxbrew/bin/brew"]:
+        if is_executable(path, os.X_OK):
+            return True
+    return False
+
+
+def is_editable(item, config) -> bool:
+    """Check if an item's current value is editable."""
+    eff = config.effective(item.key)
+    if isinstance(eff, UnsupportedValue):
+        return False
+    if item.kind == "tristate":
+        return isinstance(eff, (bool, str)) or eff is None
+    default_val = config._defaults.get(item.key)
+    if isinstance(default_val, bool):
+        return isinstance(eff, bool)
+    if isinstance(default_val, str):
+        return isinstance(eff, str)
+    return True
+
+
+def item_badges(item, brew_available: bool, is_macos: bool) -> List[str]:
+    """Return list of badge strings for an item."""
+    badges = []
+    if item.requires in ("homebrew", "darwin") and not brew_available:
+        badges.append("needs Homebrew")
+    if item.requires == "darwin" and not is_macos:
+        badges.append("macOS only")
+    return badges
+
+
+def describe_item(item, config, brew_available: bool, is_macos: bool) -> List[str]:
+    """Return wrapped description lines for an item."""
+    lines = []
+    if item.summary:
+        lines.append(item.summary)
+    lines.append("")
+
+    for key in item.lists:
+        eff = config.effective(key)
+        label = list_label(key)
+        if isinstance(eff, list):
+            formatted = format_list(eff)
+        elif isinstance(eff, UnsupportedValue):
+            formatted = "(unparsed)"
+        else:
+            formatted = str(eff) if eff is not None else "(empty)"
+        lines.append(f"{label}: {formatted}")
+
+    if item.extras:
+        lines.append(f"Also: {', '.join(item.extras)}")
+
+    eff = config.effective(item.key)
+    src = config.source(item.key)
+    if is_editable(item, config):
+        lines.append(f"Value: {status_label(eff) if isinstance(eff, (bool, str)) else eff} ({src})")
+    else:
+        if isinstance(eff, UnsupportedValue):
+            lines.append("Read-only: unsupported YAML structure.")
+        else:
+            lines.append("Read-only: value does not match the expected type.")
+
+    for badge in item_badges(item, brew_available, is_macos):
+        lines.append(badge)
+
+    return lines
+
+
+def removal_summary(item, config) -> List[str]:
+    """Return lines describing what would be removed when turning a group OFF."""
+    lines = ["This group is set to OFF and will remove:"]
+    for key in item.lists:
+        eff = config.effective(key)
+        label = list_label(key)
+        if isinstance(eff, list):
+            formatted = format_list(eff)
+        else:
+            formatted = str(eff) if eff is not None else "(empty)"
+        lines.append(f"{label}: {formatted}")
+    removals = item.removals or item.extras
+    if removals:
+        lines.append(f"Also: {', '.join(removals)}")
+    if not item.lists and not (item.removals or item.extras):
+        lines.append("No packages are currently listed for this group.")
+    return lines
+
+
+def run_tui(config, menu):
+    raise ToolError("interactive UI is not available in this build")
+
+
+def main(argv=None):
+    """Main entry point."""
+    # Check Python version
+    if sys.version_info < (3, 8):
+        print("setup-config: Python 3.8 or newer is required.", file=sys.stderr)
+        return 1
+
+    import argparse
+    parser = argparse.ArgumentParser(prog="setup-config")
+    parser.add_argument("--apply-now", action="store_true",
+                        help="Apply the playbook without opening the TUI")
+    args = parser.parse_args(argv)
+
+    if args.apply_now:
+        return apply_playbook(REPO_ROOT)
+
+    # Check for TTY
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        print("setup-config: interactive mode requires a terminal. "
+              "Use --apply-now for non-interactive apply.", file=sys.stderr)
+        return 2
+
+    # Load defaults and menu
+    try:
+        defaults = parse_yaml_subset(DEFAULT_CONFIG.read_text())
+        menu = load_menu(MENU_FILE, defaults)
+        tristate_keys = {
+            item.key
+            for category in menu.categories
+            for item in category.items
+            if item.kind == "tristate"
+        }
+        config = Config(DEFAULT_CONFIG, PREFERENCES, menu.package_keys, tristate_keys)
+    except (OSError, ToolError) as e:
+        print(f"setup-config: {e}", file=sys.stderr)
+        return 1
+
+    return run_tui(config, menu)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

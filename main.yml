@@ -32,6 +32,9 @@
           when: ansible_facts.pkg_mgr == "homebrew"
 
   tasks:
+    - name: Install setup-config command
+      ansible.builtin.import_tasks: tasks/setup-config.yml
+
     - name: Configure hostname sanity check
       ansible.builtin.import_tasks: tasks/hostname.yml
       when: hostname_sanity_check | default(true)
