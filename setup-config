@@ -1,5 +1,15 @@
-#!/usr/bin/env python3
-"""Curses configuration tool for the workstation setup playbook."""
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "prompt-toolkit>=3.0.53,<4",
+# ]
+# ///
+"""Interactive configuration tool for the workstation setup playbook.
+
+Dependencies are declared inline with PEP 723; `uv` provisions them when the
+script is run directly. Use `./setup-config` or `uv run --script setup-config`.
+"""
 
 from __future__ import annotations
 
@@ -888,8 +898,436 @@ def removal_summary(item, config) -> List[str]:
     return lines
 
 
+
 def run_tui(config, menu):
-    raise ToolError("interactive UI is not available in this build")
+    """Interactive configuration UI built with prompt_toolkit."""
+    # Imported lazily so --apply-now and the unit tests do not need uv.
+    try:
+        from prompt_toolkit import Application, prompt
+        from prompt_toolkit.data_structures import Point
+        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.layout import (
+            Dimension,
+            HSplit,
+            Layout,
+            VSplit,
+            Window,
+            WindowAlign,
+        )
+        from prompt_toolkit.layout.controls import FormattedTextControl
+        from prompt_toolkit.shortcuts import yes_no_dialog
+        from prompt_toolkit.styles import Style
+        from prompt_toolkit.widgets import Frame
+    except ImportError:
+        print(
+            "setup-config: the interactive UI needs prompt_toolkit.\n"
+            "Run ./setup-config (uv provisions it) or "
+            "`uv run --script setup-config`.",
+            file=sys.stderr,
+        )
+        return 2
+
+    import time
+
+    categories = menu.categories
+    state = {"cat": 0, "item": 0, "status": "", "status_until": 0.0}
+    brew = homebrew_available()
+    macos = sys.platform == "darwin"
+
+    badges = {}
+    for category in categories:
+        for entry in category.items:
+            found = item_badges(entry, brew, macos)
+            if found:
+                badges[entry.key] = found
+
+    def current_items():
+        if not categories:
+            return ()
+        return categories[state["cat"]].items
+
+    def selected_item():
+        options = current_items()
+        if not options:
+            return None
+        state["item"] = max(0, min(state["item"], len(options) - 1))
+        return options[state["item"]]
+
+    def find_item(key):
+        for category in categories:
+            for entry in category.items:
+                if entry.key == key:
+                    return entry
+        return None
+
+    def notify(message, seconds=4.0):
+        state["status"] = message
+        state["status_until"] = time.monotonic() + seconds
+
+    def header_text():
+        return [("class:header", " Workstation Setup ")]
+
+    def help_text():
+        return [(
+            "class:header",
+            " \u2191\u2193 move  \u2190\u2192 category  Enter toggle  r reset  a apply  q quit ",
+        )]
+
+    def category_text():
+        rendered = []
+        for index, category in enumerate(categories):
+            style = "class:selected" if index == state["cat"] else ""
+            rendered.append((style, f" {category.label}"))
+            if index < len(categories) - 1:
+                rendered.append(("", "\n"))
+        return rendered
+
+    def category_cursor():
+        return Point(x=0, y=state["cat"])
+
+    def item_text():
+        options = current_items()
+        if not options:
+            return [("class:dim", " No options in this category")]
+        rendered = []
+        for index, entry in enumerate(options):
+            effective = config.effective(entry.key)
+            if isinstance(effective, UnsupportedValue):
+                shown = "unparsed"
+            elif isinstance(effective, str):
+                shown = status_label(effective)
+                if entry.key == "agent_python_venv":
+                    shown = Path(expand_home_formula(shown)).name or shown
+                elif len(shown) > 20:
+                    shown = shown[:19] + "\u2026"
+            else:
+                shown = status_label(effective)
+            marker = "*" if config.source(entry.key) == "override" else " "
+            line = f"{marker} {entry.label}  [{shown}]"
+            if entry.key in badges:
+                line += " !"
+            style = "class:selected" if index == state["item"] else ""
+            rendered.append((style, line))
+            if index < len(options) - 1:
+                rendered.append(("", "\n"))
+        return rendered
+
+    def item_cursor():
+        options = current_items()
+        if not options:
+            return Point(x=0, y=0)
+        return Point(x=0, y=max(0, min(state["item"], len(options) - 1)))
+
+    def detail_text():
+        entry = selected_item()
+        if entry is None:
+            return [("class:dim", " No option selected")]
+
+        rendered = []
+
+        def line(style="", text=""):
+            rendered.append((style, text))
+            rendered.append(("", "\n"))
+
+        line("class:title", entry.label)
+        if entry.summary:
+            line(text=entry.summary)
+            line()
+
+        for key in entry.lists:
+            value = config.effective(key)
+            if isinstance(value, list):
+                shown = format_list(value)
+            elif isinstance(value, UnsupportedValue):
+                shown = "(unparsed)"
+            else:
+                shown = str(value) if value is not None else "(empty)"
+            line(text=f"{list_label(key)}: {shown}")
+
+        if entry.extras:
+            line(text=f"Also: {', '.join(entry.extras)}")
+
+        line()
+        effective = config.effective(entry.key)
+        if is_editable(entry, config):
+            shown = status_label(effective)
+            if entry.key == "agent_python_venv" and isinstance(effective, str):
+                shown = expand_home_formula(effective)
+            line(text=f"Value: {shown} ({config.source(entry.key)})")
+        elif isinstance(effective, UnsupportedValue):
+            line("class:error", "Read-only: unsupported YAML structure.")
+        else:
+            line("class:error", "Read-only: value does not match the expected type.")
+
+        if entry.key in badges:
+            line()
+            for badge in badges[entry.key]:
+                line("class:warn", f"! {badge}")
+
+        removals = entry.removals or entry.extras
+        if entry.kind == "tristate" and effective is False:
+            line()
+            if entry.lists:
+                line("class:warn", "OFF: removes the packages listed above.")
+            else:
+                line("class:warn", "OFF: no packages listed for this group.")
+            if removals:
+                line("class:warn", "Also removes: " + ", ".join(removals))
+        elif entry.kind == "tristate" and removals:
+            line()
+            line("class:warn", "OFF removes: " + ", ".join(removals))
+
+        line()
+        if entry.kind == "bool":
+            line("class:dim", "[Enter] toggle   [r] reset")
+        elif entry.kind == "tristate":
+            line("class:dim", "[Enter] cycle ON/SKIP/OFF   [r] reset")
+        else:
+            line("class:dim", "[Enter] edit   [r] reset")
+        return rendered
+
+    def footer_text():
+        if state["status"] and time.monotonic() < state["status_until"]:
+            return [("class:status", " " + state["status"])]
+        return [("class:footer", " Select an option and press Enter.  * = local override")]
+
+    style = Style.from_dict({
+        "header": "bg:#005f87 #ffffff bold",
+        "footer": "bg:#262626 #c6c6c6",
+        "status": "bg:#262626 #ffd75f bold",
+        "selected": "bg:#5f8787 #000000 bold",
+        "title": "#5fd7ff bold",
+        "warn": "#ffd75f",
+        "error": "#ff5f5f bold",
+        "dim": "#9e9e9e",
+        "frame.border": "#5f8787",
+        "frame.label": "#5fd7d7 bold",
+    })
+
+    def build_app():
+        key_bindings = KeyBindings()
+
+        def move_item(delta):
+            options = current_items()
+            if options:
+                state["item"] = max(0, min(state["item"] + delta, len(options) - 1))
+
+        def move_category(delta):
+            if categories:
+                state["cat"] = max(0, min(state["cat"] + delta, len(categories) - 1))
+                state["item"] = 0
+
+        @key_bindings.add("q")
+        @key_bindings.add("c-c")
+        @key_bindings.add("c-q")
+        def _quit(event):
+            event.app.exit(result=("quit",))
+
+        @key_bindings.add("up")
+        @key_bindings.add("k")
+        def _up(event):
+            move_item(-1)
+
+        @key_bindings.add("down")
+        @key_bindings.add("j")
+        def _down(event):
+            move_item(1)
+
+        @key_bindings.add("pageup")
+        def _page_up(event):
+            move_item(-5)
+
+        @key_bindings.add("pagedown")
+        def _page_down(event):
+            move_item(5)
+
+        @key_bindings.add("left")
+        @key_bindings.add("h")
+        def _left(event):
+            move_category(-1)
+
+        @key_bindings.add("right")
+        @key_bindings.add("l")
+        def _right(event):
+            move_category(1)
+
+        @key_bindings.add("enter")
+        @key_bindings.add("space")
+        def _activate(event):
+            entry = selected_item()
+            if entry is None:
+                return
+            if not is_editable(entry, config):
+                notify(f"{entry.label}: read-only")
+                return
+            if entry.kind == "string":
+                event.app.exit(result=("edit", entry.key))
+                return
+            try:
+                if entry.kind == "tristate":
+                    new_value = cycle_tristate(config.effective(entry.key))
+                else:
+                    new_value = not bool(config.effective(entry.key))
+                changed = config.set(entry.key, new_value)
+                label = status_label(new_value)
+                notify(f"{entry.label}: {label}" if changed else f"{entry.label} already {label}")
+            except ToolError as exc:
+                notify(f"Error: {exc}", 6.0)
+
+        @key_bindings.add("r")
+        def _reset(event):
+            entry = selected_item()
+            if entry is None:
+                return
+            try:
+                changed = config.reset(entry.key)
+                notify(
+                    f"{entry.label}: reset to default"
+                    if changed else f"{entry.label} already at default"
+                )
+            except ToolError as exc:
+                notify(f"Error: {exc}", 6.0)
+
+        @key_bindings.add("a")
+        def _apply(event):
+            event.app.exit(result=("apply",))
+
+        body = VSplit(
+            [
+                Frame(
+                    Window(
+                        FormattedTextControl(
+                            text=category_text,
+                            show_cursor=False,
+                            get_cursor_position=category_cursor,
+                        ),
+                        wrap_lines=False,
+                    ),
+                    title="Categories",
+                    width=Dimension(weight=3, min=18),
+                ),
+                Frame(
+                    Window(
+                        FormattedTextControl(
+                            text=item_text,
+                            focusable=True,
+                            show_cursor=False,
+                            get_cursor_position=item_cursor,
+                        ),
+                        wrap_lines=False,
+                    ),
+                    title="Options",
+                    width=Dimension(weight=7, min=32),
+                ),
+                Frame(
+                    Window(
+                        FormattedTextControl(text=detail_text, show_cursor=False),
+                        wrap_lines=True,
+                    ),
+                    title="Details",
+                    width=Dimension(weight=8, min=24),
+                ),
+            ],
+            padding=1,
+            height=Dimension(weight=1),
+            window_too_small=Window(
+                FormattedTextControl(
+                    text=" Terminal too small. Resize to at least 80 columns.",
+                    show_cursor=False,
+                ),
+                align=WindowAlign.CENTER,
+                style="class:error",
+            ),
+        )
+
+        layout = Layout(
+            HSplit(
+                [
+                    VSplit(
+                        [
+                            Window(
+                                FormattedTextControl(text=header_text, show_cursor=False),
+                                height=1,
+                                style="class:header",
+                            ),
+                            Window(
+                                FormattedTextControl(text=help_text, show_cursor=False),
+                                height=1,
+                                style="class:header",
+                                align=WindowAlign.RIGHT,
+                            ),
+                        ],
+                        height=1,
+                    ),
+                    body,
+                    Window(
+                        FormattedTextControl(text=footer_text, show_cursor=False),
+                        height=1,
+                        style="class:footer",
+                    ),
+                ],
+                height=Dimension(weight=1),
+            )
+        )
+
+        return Application(
+            layout=layout,
+            key_bindings=key_bindings,
+            style=style,
+            full_screen=True,
+            refresh_interval=0.5,
+        )
+
+    try:
+        while True:
+            result = build_app().run()
+            if not result or result[0] == "quit":
+                return 0
+            if result[0] == "apply":
+                confirmed = yes_no_dialog(
+                    title="Apply playbook",
+                    text="Run the Ansible playbook now?",
+                ).run()
+                if not confirmed:
+                    notify("Apply cancelled.")
+                    continue
+                code = apply_playbook(REPO_ROOT)
+                if code == 0:
+                    notify("Playbook applied successfully.", 6.0)
+                else:
+                    notify(f"Playbook exited with status {code}.", 8.0)
+                continue
+            if result[0] == "edit":
+                entry = find_item(result[1])
+                if entry is None:
+                    continue
+                current = config.effective(entry.key)
+                if entry.key == "agent_python_venv" and isinstance(current, str):
+                    default = expand_home_formula(current)
+                else:
+                    default = "" if current is None else str(current)
+                try:
+                    value = prompt(f" {entry.label}: ", default=default)
+                except (EOFError, KeyboardInterrupt):
+                    notify("Edit cancelled.")
+                    continue
+                try:
+                    if entry.key == "agent_python_venv":
+                        changed = save_venv_value(config, value)
+                    else:
+                        changed = config.set(entry.key, value)
+                    notify(
+                        f"{entry.label}: saved"
+                        if changed else f"{entry.label}: unchanged"
+                    )
+                except ToolError as exc:
+                    notify(f"Error: {exc}", 6.0)
+                continue
+    except KeyboardInterrupt:
+        return 130
+    except Exception as exc:
+        print(f"setup-config: TUI error: {exc}", file=sys.stderr)
+        return 1
 
 
 def main(argv=None):

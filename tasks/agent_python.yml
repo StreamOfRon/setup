@@ -1,27 +1,4 @@
-- name: Ensure ~/.local/bin exists
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin"
-    state: directory
-    mode: "0755"
-
-- name: Check for uv binary
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
-  register: uv_bin
-
-- name: Download uv install script
-  ansible.builtin.get_url:
-    url: https://astral.sh/uv/install.sh
-    dest: /tmp/uv-install.sh
-    mode: "0755"
-  when: not uv_bin.stat.exists
-
-- name: Install uv via official script
-  ansible.builtin.command:
-    cmd: /bin/sh /tmp/uv-install.sh
-    creates: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
-  when: not uv_bin.stat.exists
-
+# uv is installed as a prerequisite by main.yml (tasks/uv.yml).
 - name: Create default venv with uv
   ansible.builtin.command:
     cmd: "{{ lookup('env', 'HOME') }}/.local/bin/uv venv {{ agent_python_venv }} --seed"

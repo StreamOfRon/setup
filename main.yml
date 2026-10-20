@@ -18,6 +18,9 @@
         file: "{{ lookup('env', 'HOME') }}/.setup-options"
       when: local_options_file.stat.exists
 
+    - name: Ensure uv is installed
+      ansible.builtin.import_tasks: tasks/uv.yml
+
     - name: Update package managers
       block:
         - name: Update homebrew packages
