@@ -275,4 +275,8 @@ terraform.rc
 # Git worktrees created by worktrunk (managed via .worktrees/ inside each repo)
 .worktrees/
 
+### Superpowers ###
+# Ignore superpowers planning/spec artifacts
+docs/superpowers/**
+
 # End of https://www.toptal.com/developers/gitignore/api/linux,python,terraform,macos,ansible,git
