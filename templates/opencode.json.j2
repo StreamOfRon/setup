@@ -75,6 +75,21 @@
       "action": "external_directory",
       "resource": "/private/tmp/*",
       "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl-readonly *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl readonly *",
+      "effect": "allow"
     }
   ],
   "providers": {

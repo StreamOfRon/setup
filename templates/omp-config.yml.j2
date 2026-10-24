@@ -23,6 +23,19 @@ ida:
   enabled: false
 bash:
   direnv: auto
+  patterns:
+    - match: "kubectl-readonly *"
+      approval: allow
+    - match: "kubectl-readonly"
+      approval: allow
+    - match: "kubectl readonly *"
+      approval: allow
+    - match: "kubectl readonly"
+      approval: allow
+    - match: "kubectl *"
+      approval: prompt
+    - match: "kubectl"
+      approval: prompt
 bashInterceptor:
   enabled: false
 memory:
