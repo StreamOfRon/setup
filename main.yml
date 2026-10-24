@@ -28,6 +28,12 @@
             update_homebrew: true
           when: ansible_facts.pkg_mgr == "homebrew"
 
+        - name: Update apt cache
+          ansible.builtin.apt:
+            update_cache: true
+          become: true
+          when: ansible_facts.pkg_mgr == "apt"
+
     - name: Get list of installed packages
       block:
         - name: Get installed homebrew packages
@@ -71,6 +77,16 @@
             casks: "{{ sync_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage sync tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_sync_tools | default(false) }}"
+            groupname: sync
+            formulae: "{{ sync_formulae }}"
+            casks: "{{ sync_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about sync tools install failure
           ansible.builtin.debug:
@@ -87,6 +103,16 @@
             casks: "{{ misc_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage misc apps packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_misc_apps | default(false) }}"
+            groupname: misc
+            formulae: "{{ misc_formulae }}"
+            casks: "{{ misc_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about misc apps install failure
           ansible.builtin.debug:
@@ -103,6 +129,16 @@
             casks: "{{ entertainment_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage entertainment apps packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_entertainment_apps | default(false) }}"
+            groupname: entertainment
+            formulae: "{{ entertainment_formulae }}"
+            casks: "{{ entertainment_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about entertainment apps install failure
           ansible.builtin.debug:
@@ -119,6 +155,16 @@
             casks: "{{ media_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage media tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_media_tools | default(false) }}"
+            groupname: media
+            formulae: "{{ media_formulae }}"
+            casks: "{{ media_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about media tools install failure
           ansible.builtin.debug:
@@ -136,6 +182,16 @@
             casks: "{{ kube_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage kube tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_kube_apps | default(false) }}"
+            groupname: kube
+            formulae: "{{ kube_formulae }}"
+            casks: "{{ kube_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about kube tools install failure
           ansible.builtin.debug:
@@ -152,6 +208,16 @@
             casks: "{{ dev_cli_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage dev cli tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_dev_cli_tools | default(false) }}"
+            groupname: dev-cli
+            formulae: "{{ dev_cli_formulae }}"
+            casks: "{{ dev_cli_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about dev cli tools install failure
           ansible.builtin.debug:
@@ -168,6 +234,16 @@
             casks: "{{ dev_gui_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage dev gui tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_dev_gui_tools | default(false) }}"
+            groupname: dev-gui
+            formulae: []
+            casks: "{{ dev_gui_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about dev gui tools install failure
           ansible.builtin.debug:
@@ -197,6 +273,16 @@
             casks: "{{ common_cli_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage common cli tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_common_cli_tools | default(false) }}"
+            groupname: common cli
+            formulae: "{{ common_cli_formulae }}"
+            casks: "{{ common_cli_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about common cli tools install failure
           ansible.builtin.debug:
@@ -213,6 +299,16 @@
             casks: "{{ aws_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage aws tools packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_aws_tools | default(false) }}"
+            groupname: aws
+            formulae: "{{ aws_formulae }}"
+            casks: "{{ aws_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about aws tools install failure
           ansible.builtin.debug:
@@ -229,6 +325,16 @@
             casks: "{{ install_other_casks }}"
           when:
             - ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Manage other packages (apt)
+          ansible.builtin.import_tasks: tasks/apt_packages.yml
+          vars:
+            enabled: "{{ install_other_apps | default(true) }}"
+            groupname: other
+            formulae: "{{ install_other_formulae }}"
+            casks: "{{ install_other_casks }}"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
       rescue:
         - name: Warn about other packages install failure
           ansible.builtin.debug:

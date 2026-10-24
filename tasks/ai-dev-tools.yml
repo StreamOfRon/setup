@@ -12,6 +12,16 @@
   when:
     - ansible_facts.pkg_mgr == "homebrew"
 
+- name: Apt packages for ai dev tools
+  ansible.builtin.import_tasks: tasks/apt_packages.yml
+  vars:
+    enabled: "{{ install_ai_dev_tools | default(false) }}"
+    groupname: ai-dev-tools
+    formulae: "{{ ai_dev_tools_formulae }}"
+    casks: "{{ ai_dev_tools_casks }}"
+  when:
+    - ansible_facts.pkg_mgr == "apt"
+
 # --- true: install and manage ---
 
 - name: Install opencode via official script
