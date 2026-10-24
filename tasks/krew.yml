@@ -1,0 +1,42 @@
+# Install krew itself. All krew setup lives here:
+#   - Homebrew systems: manage the `krew` formula via Homebrew.
+#   - Other systems: follow the manual instructions at
+#     https://krew.sigs.k8s.io/docs/user-guide/setup/install/.
+
+- name: Manage krew via Homebrew
+  ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+  vars:
+    enabled: "{{ install_kube_apps | default(false) }}"
+    groupname: krew
+    taps: []
+    formulae:
+      - krew
+    casks: []
+  when:
+    - ansible_facts.pkg_mgr == "homebrew"
+
+- name: Ensure git is installed (krew prerequisite, non-Homebrew)
+  ansible.builtin.apt:
+    name: git
+    state: present
+  become: true
+  when:
+    - install_kube_apps | default(false) == true
+    - ansible_facts.pkg_mgr != "homebrew"
+
+- name: Install krew via manual instructions (non-Homebrew)
+  ansible.builtin.shell: |
+    set -e
+    cd "$(mktemp -d)"
+    OS="$(uname | tr '[:upper:]' '[:lower:]')"
+    ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')"
+    KREW="krew-${OS}_${ARCH}"
+    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz"
+    tar zxvf "${KREW}.tar.gz"
+    ./"${KREW}" install krew
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when:
+    - install_kube_apps | default(false) == true
+    - ansible_facts.pkg_mgr != "homebrew"
