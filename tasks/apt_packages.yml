@@ -1,63 +1,14 @@
-# Apt (Debian/Ubuntu) counterpart of homebrew_packages.yml.
+# Apt (Debian/Ubuntu) package management for a group.
 #
-# Homebrew formula/cask names are mapped to their apt equivalents below; names
-# with no apt equivalent (None) are skipped. Unmapped names are passed through
-# verbatim so callers can list apt package names directly.
-- name: Build apt package list for {{ groupname }}
-  ansible.builtin.set_fact:
-    apt_packages_to_manage: []
-
-- name: Map homebrew names to apt packages for {{ groupname }}
-  ansible.builtin.set_fact:
-    apt_packages_to_manage: >-
-      {{ apt_packages_to_manage + ([apt_package_map.get(item, item)] if apt_package_map.get(item, item) is not none else []) }}
-  loop: "{{ (formulae | default([])) + (casks | default([])) }}"
-  vars:
-    apt_package_map:
-      kubernetes-cli: kubectl
-      kubectx: kubectx
-      argocd: null
-      krew: null
-      ansible-lint: ansible-lint
-      gh: gh
-      git: git
-      pre-commit: pre-commit
-      yq: yq
-      fzf: fzf
-      node: nodejs
-      zstd: zstd
-      awscli: awscli
-      s3cmd: s3cmd
-      nextcloud: nextcloud-desktop
-      syncthing: syncthing
-      vlc: vlc
-      handbrake: handbrake
-      unar: unar
-      the-unarchiver: unar
-      fonts-firacode: fonts-firacode
-      font-fira-code: fonts-firacode
-      font-fira-code-nerd-font: null
-      zed: null
-      freelens: null
-      podman-desktop: null
-      iterm2: null
-      spotify: null
-      makemkv: null
-      herdr: null
-      worktrunk: null
-      git-credential-manager: null
-      mas: null
-      autoenv: null
-      powerlevel10k: null
-      font-meslo-for-powerlevel10k: null
-  when: enabled != "ignore"
-
+# Unlike the Homebrew path (formulae + casks), apt uses a single list of
+# package names provided via `packages`.
 - name: Apt packages for {{ groupname }}
   ansible.builtin.apt:
-    name: "{{ apt_packages_to_manage }}"
+    name: "{{ packages }}"
     state: '{{ enabled | ternary("present", "absent") }}'
     update_cache: false
   become: true
   when:
     - enabled != "ignore"
-    - apt_packages_to_manage | length > 0
+    - packages is defined
+    - packages | length > 0

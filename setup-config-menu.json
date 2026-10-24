@@ -9,78 +9,132 @@
           "label": "Sync tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["sync_formulae", "sync_casks"]
+          "lists": [
+            "sync_formulae",
+            "sync_casks",
+            "sync_apt_packages"
+          ]
         },
         {
           "key": "install_misc_apps",
           "label": "Misc apps",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["misc_formulae", "misc_casks"]
+          "lists": [
+            "misc_formulae",
+            "misc_casks",
+            "misc_apt_packages"
+          ]
         },
         {
           "key": "install_entertainment_apps",
           "label": "Entertainment apps",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["entertainment_formulae", "entertainment_casks"]
+          "lists": [
+            "entertainment_formulae",
+            "entertainment_casks",
+            "entertainment_apt_packages"
+          ]
         },
         {
           "key": "install_media_tools",
           "label": "Media tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["media_formulae", "media_casks"]
+          "lists": [
+            "media_formulae",
+            "media_casks",
+            "media_apt_packages"
+          ]
         },
         {
           "key": "install_kube_apps",
           "label": "Kubernetes tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["kube_taps", "kube_formulae", "kube_casks"]
+          "lists": [
+            "kube_taps",
+            "kube_formulae",
+            "kube_casks",
+            "kube_apt_packages"
+          ]
         },
         {
           "key": "install_dev_cli_tools",
           "label": "Dev CLI tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["dev_cli_formulae", "dev_cli_casks"]
+          "lists": [
+            "dev_cli_formulae",
+            "dev_cli_casks",
+            "dev_cli_apt_packages"
+          ]
         },
         {
           "key": "install_dev_gui_tools",
           "label": "Dev GUI tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["dev_gui_formulae", "dev_gui_casks"]
+          "lists": [
+            "dev_gui_formulae",
+            "dev_gui_casks",
+            "dev_gui_apt_packages"
+          ]
         },
         {
           "key": "install_ai_dev_tools",
           "label": "AI dev tools",
           "type": "tristate",
-          "lists": ["ai_dev_tools_formulae", "ai_dev_tools_casks"],
-          "extras": ["opencode", "omp", "managed opencode/omp/herdr configs", "agent skills"],
-          "removals": ["opencode", "omp", "managed opencode/omp/herdr configs"]
+          "lists": [
+            "ai_dev_tools_formulae",
+            "ai_dev_tools_casks",
+            "ai_dev_tools_apt_packages"
+          ],
+          "extras": [
+            "opencode",
+            "omp",
+            "managed opencode/omp/herdr configs",
+            "agent skills"
+          ],
+          "removals": [
+            "opencode",
+            "omp",
+            "managed opencode/omp/herdr configs"
+          ]
         },
         {
           "key": "install_common_cli_tools",
           "label": "Common CLI tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["common_cli_formulae", "common_cli_casks"]
+          "lists": [
+            "common_cli_formulae",
+            "common_cli_casks",
+            "common_cli_apt_packages"
+          ]
         },
         {
           "key": "install_aws_tools",
           "label": "AWS tools",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["aws_formulae", "aws_casks"]
+          "lists": [
+            "aws_formulae",
+            "aws_casks",
+            "aws_apt_packages"
+          ]
         },
         {
           "key": "install_other_apps",
           "label": "Other packages",
           "type": "tristate",
           "requires": "homebrew",
-          "lists": ["install_other_formulae", "install_other_casks"]
+          "lists": [
+            "install_other_formulae",
+            "install_other_casks",
+            "install_other_apt_packages"
+          ]
         }
       ]
     },
@@ -112,7 +166,9 @@
           "key": "agent_python",
           "label": "Agent Python venv",
           "type": "bool",
-          "lists": ["agent_python_packages"]
+          "lists": [
+            "agent_python_packages"
+          ]
         },
         {
           "key": "agent_python_venv",
@@ -135,7 +191,10 @@
           "label": "Mac App Store management",
           "type": "bool",
           "requires": "darwin",
-          "lists": ["install_mas_apps", "remove_mas_apps"]
+          "lists": [
+            "install_mas_apps",
+            "remove_mas_apps"
+          ]
         },
         {
           "key": "install_apple_office",
@@ -186,6 +245,17 @@
     "install_other_formulae",
     "install_other_casks",
     "remove_other_formulae",
-    "remove_other_casks"
+    "remove_other_casks",
+    "sync_apt_packages",
+    "misc_apt_packages",
+    "entertainment_apt_packages",
+    "media_apt_packages",
+    "kube_apt_packages",
+    "dev_cli_apt_packages",
+    "dev_gui_apt_packages",
+    "ai_dev_tools_apt_packages",
+    "common_cli_apt_packages",
+    "aws_apt_packages",
+    "install_other_apt_packages"
   ]
 }

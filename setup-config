@@ -748,6 +748,8 @@ def list_label(key: str) -> str:
         return "Formulae"
     if key.endswith("_casks"):
         return "Casks"
+    if key.endswith("_apt_packages"):
+        return "Apt packages"
     if key.endswith("_taps"):
         return "Taps"
     if key == "agent_python_packages":

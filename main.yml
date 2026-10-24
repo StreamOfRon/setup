@@ -83,8 +83,7 @@
           vars:
             enabled: "{{ install_sync_tools | default(false) }}"
             groupname: sync
-            formulae: "{{ sync_formulae }}"
-            casks: "{{ sync_casks }}"
+            packages: "{{ sync_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -109,8 +108,7 @@
           vars:
             enabled: "{{ install_misc_apps | default(false) }}"
             groupname: misc
-            formulae: "{{ misc_formulae }}"
-            casks: "{{ misc_casks }}"
+            packages: "{{ misc_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -135,8 +133,7 @@
           vars:
             enabled: "{{ install_entertainment_apps | default(false) }}"
             groupname: entertainment
-            formulae: "{{ entertainment_formulae }}"
-            casks: "{{ entertainment_casks }}"
+            packages: "{{ entertainment_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -161,8 +158,7 @@
           vars:
             enabled: "{{ install_media_tools | default(false) }}"
             groupname: media
-            formulae: "{{ media_formulae }}"
-            casks: "{{ media_casks }}"
+            packages: "{{ media_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -188,8 +184,7 @@
           vars:
             enabled: "{{ install_kube_apps | default(false) }}"
             groupname: kube
-            formulae: "{{ kube_formulae }}"
-            casks: "{{ kube_casks }}"
+            packages: "{{ kube_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -214,8 +209,7 @@
           vars:
             enabled: "{{ install_dev_cli_tools | default(false) }}"
             groupname: dev-cli
-            formulae: "{{ dev_cli_formulae }}"
-            casks: "{{ dev_cli_casks }}"
+            packages: "{{ dev_cli_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -240,8 +234,7 @@
           vars:
             enabled: "{{ install_dev_gui_tools | default(false) }}"
             groupname: dev-gui
-            formulae: []
-            casks: "{{ dev_gui_casks }}"
+            packages: "{{ dev_gui_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -279,8 +272,7 @@
           vars:
             enabled: "{{ install_common_cli_tools | default(false) }}"
             groupname: common cli
-            formulae: "{{ common_cli_formulae }}"
-            casks: "{{ common_cli_casks }}"
+            packages: "{{ common_cli_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -305,8 +297,7 @@
           vars:
             enabled: "{{ install_aws_tools | default(false) }}"
             groupname: aws
-            formulae: "{{ aws_formulae }}"
-            casks: "{{ aws_casks }}"
+            packages: "{{ aws_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:
@@ -331,8 +322,7 @@
           vars:
             enabled: "{{ install_other_apps | default(true) }}"
             groupname: other
-            formulae: "{{ install_other_formulae }}"
-            casks: "{{ install_other_casks }}"
+            packages: "{{ install_other_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
       rescue:

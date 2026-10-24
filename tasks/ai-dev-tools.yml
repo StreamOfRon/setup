@@ -17,8 +17,7 @@
   vars:
     enabled: "{{ install_ai_dev_tools | default(false) }}"
     groupname: ai-dev-tools
-    formulae: "{{ ai_dev_tools_formulae }}"
-    casks: "{{ ai_dev_tools_casks }}"
+    packages: "{{ ai_dev_tools_apt_packages }}"
   when:
     - ansible_facts.pkg_mgr == "apt"
 
