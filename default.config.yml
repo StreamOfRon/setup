@@ -27,17 +27,24 @@ sync_formulae: []
 sync_casks:
   - nextcloud
   - syncthing
+sync_apt_packages:
+  - nextcloud-desktop
+  - syncthing
 
 install_misc_apps: false
 misc_formulae: []
 misc_casks:
   - iterm2
   - the-unarchiver
+misc_apt_packages:
+  - unar
 
 install_entertainment_apps: false
 entertainment_formulae: []
 entertainment_casks:
   - spotify
+  - vlc
+entertainment_apt_packages:
   - vlc
 
 install_media_tools: false
@@ -45,6 +52,8 @@ media_formulae: []
 media_casks:
   - handbrake
   - makemkv
+media_apt_packages:
+  - handbrake
 
 install_kube_apps: false
 kube_taps: []
@@ -56,6 +65,9 @@ kube_formulae:
 kube_casks:
   - freelens
   - podman-desktop
+kube_apt_packages:
+  - kubectl
+  - kubectx
 
 install_dev_cli_tools: false
 dev_cli_formulae:
@@ -65,6 +77,12 @@ dev_cli_formulae:
   - pre-commit
   - yq
 dev_cli_casks: []
+dev_cli_apt_packages:
+  - ansible-lint
+  - gh
+  - git
+  - pre-commit
+  - yq
 
 install_dev_gui_tools: false
 dev_gui_formulae: []
@@ -72,6 +90,8 @@ dev_gui_casks:
   - font-fira-code
   - font-fira-code-nerd-font
   - zed
+dev_gui_apt_packages:
+  - fonts-firacode
 
 install_ai_dev_tools: false
 ai_dev_tools_formulae:
@@ -79,20 +99,29 @@ ai_dev_tools_formulae:
   - fzf
   - node
 ai_dev_tools_casks: []
+ai_dev_tools_apt_packages:
+  - fzf
+  - nodejs
 
 install_common_cli_tools: false
 common_cli_formulae:
   - zstd
 common_cli_casks: []
+common_cli_apt_packages:
+  - zstd
 
 install_aws_tools: false
 aws_formulae:
   - awscli
   - s3cmd
 aws_casks: []
+aws_apt_packages:
+  - awscli
+  - s3cmd
 
 install_other_apps: true
 install_other_formulae: []
 install_other_casks: []
+install_other_apt_packages: []
 remove_other_formulae: []
 remove_other_casks: []

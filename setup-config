@@ -620,7 +620,7 @@ def validate_menu(menu: Menu, defaults: Mapping[str, object]) -> List[str]:
                         errors.append(f"item '{item.key}': type mismatch, expected bool or 'ignore'")
 
     # Check requires values
-    valid_requires = {None, "homebrew", "darwin"}
+    valid_requires = {None, "homebrew", "apt", "darwin"}
     for cat in menu.categories:
         for item in cat.items:
             if item.requires not in valid_requires:
@@ -748,6 +748,8 @@ def list_label(key: str) -> str:
         return "Formulae"
     if key.endswith("_casks"):
         return "Casks"
+    if key.endswith("_apt_packages"):
+        return "Apt packages"
     if key.endswith("_taps"):
         return "Taps"
     if key == "agent_python_packages":
@@ -817,6 +819,16 @@ def homebrew_available(which=shutil.which, is_executable=os.access) -> bool:
     return False
 
 
+def apt_available(which=shutil.which, is_executable=os.access) -> bool:
+    """Check if apt is available."""
+    if which("apt-get") or which("apt"):
+        return True
+    for path in ["/usr/bin/apt-get", "/usr/bin/apt"]:
+        if is_executable(path, os.X_OK):
+            return True
+    return False
+
+
 def is_editable(item, config) -> bool:
     """Check if an item's current value is editable."""
     eff = config.effective(item.key)
@@ -832,17 +844,19 @@ def is_editable(item, config) -> bool:
     return True
 
 
-def item_badges(item, brew_available: bool, is_macos: bool) -> List[str]:
+def item_badges(item, brew_available: bool, is_macos: bool, apt_available: bool = False) -> List[str]:
     """Return list of badge strings for an item."""
     badges = []
-    if item.requires in ("homebrew", "darwin") and not brew_available:
+    if item.requires in ("homebrew", "darwin") and not brew_available and not (item.requires == "homebrew" and apt_available):
         badges.append("needs Homebrew")
+    if item.requires == "apt" and not apt_available:
+        badges.append("needs apt")
     if item.requires == "darwin" and not is_macos:
         badges.append("macOS only")
     return badges
 
 
-def describe_item(item, config, brew_available: bool, is_macos: bool) -> List[str]:
+def describe_item(item, config, brew_available: bool, is_macos: bool, apt_available: bool = False) -> List[str]:
     """Return wrapped description lines for an item."""
     lines = []
     if item.summary:
@@ -873,7 +887,7 @@ def describe_item(item, config, brew_available: bool, is_macos: bool) -> List[st
         else:
             lines.append("Read-only: value does not match the expected type.")
 
-    for badge in item_badges(item, brew_available, is_macos):
+    for badge in item_badges(item, brew_available, is_macos, apt_available):
         lines.append(badge)
 
     return lines
@@ -932,12 +946,13 @@ def run_tui(config, menu):
     categories = menu.categories
     state = {"cat": 0, "item": 0, "status": "", "status_until": 0.0}
     brew = homebrew_available()
+    apt = apt_available()
     macos = sys.platform == "darwin"
 
     badges = {}
     for category in categories:
         for entry in category.items:
-            found = item_badges(entry, brew, macos)
+            found = item_badges(entry, brew, macos, apt)
             if found:
                 badges[entry.key] = found
 

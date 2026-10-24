@@ -1,0 +1,14 @@
+# Apt (Debian/Ubuntu) package management for a group.
+#
+# Unlike the Homebrew path (formulae + casks), apt uses a single list of
+# package names provided via `packages`.
+- name: Apt packages for {{ groupname }}
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: '{{ enabled | ternary("present", "absent") }}'
+    update_cache: false
+  become: true
+  when:
+    - enabled != "ignore"
+    - packages is defined
+    - packages | length > 0
