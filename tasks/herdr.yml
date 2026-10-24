@@ -1,18 +1,39 @@
+- name: Check for herdr binary
+  ansible.builtin.command: which herdr
+  register: herdr_binary
+  changed_when: false
+  failed_when: false
+
+- name: Check for worktrunk binary
+  ansible.builtin.command: which wt
+  register: worktrunk_binary
+  changed_when: false
+  failed_when: false
+
+- name: Check for fzf binary
+  ansible.builtin.command: which fzf
+  register: fzf_binary
+  changed_when: false
+  failed_when: false
+
 - name: Ensure worktrunk config directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/worktrunk"
     state: directory
+  when: worktrunk_binary.rc == 0
 
 - name: Manage worktrunk config
   ansible.builtin.copy:
     src: files/worktrunk-config.toml
     dest: "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"
     mode: "0644"
+  when: worktrunk_binary.rc == 0
 
 - name: Ensure herdr config directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/herdr"
     state: directory
+  when: herdr_binary.rc == 0
 
 # Append-only: herdr's config.toml holds user settings (theme, toasts, sound)
 - name: Manage herdr worktree keybindings
@@ -41,7 +62,15 @@
       description = "Worktree: merge into the target branch"
     create: true
     mode: "0644"
+  when:
+    - herdr_binary.rc == 0
+    - worktrunk_binary.rc == 0
+    - fzf_binary.rc == 0
 
 - name: Install herdr-worktrunk plugin
   ansible.builtin.command: herdr plugin install devashish2203/herdr-worktrunk --yes
   changed_when: false
+  when:
+    - herdr_binary.rc == 0
+    - worktrunk_binary.rc == 0
+    - fzf_binary.rc == 0

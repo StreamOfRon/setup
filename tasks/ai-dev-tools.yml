@@ -24,6 +24,11 @@
   changed_when: false
   when: install_ai_dev_tools | default(false) == true
 
+- name: Install herdr via official script
+  ansible.builtin.shell: curl -fsSL https://herdr.dev/install.sh | sh
+  changed_when: false
+  when: install_ai_dev_tools | default(false) == true
+
 - name: Manage opencode configuration
   ansible.builtin.import_tasks: tasks/opencode.yml
   when: install_ai_dev_tools | default(false) == true
@@ -47,6 +52,12 @@
 - name: Remove omp binary
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.local/bin/omp"
+    state: absent
+  when: install_ai_dev_tools | default(false) == false
+
+- name: Remove herdr binary
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/herdr"
     state: absent
   when: install_ai_dev_tools | default(false) == false
 

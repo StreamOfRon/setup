@@ -57,7 +57,6 @@
           "key": "install_ai_dev_tools",
           "label": "AI dev tools",
           "type": "tristate",
-          "requires": "homebrew",
           "lists": ["ai_dev_tools_formulae", "ai_dev_tools_casks"],
           "extras": ["opencode", "omp", "managed opencode/omp/herdr configs", "agent skills"],
           "removals": ["opencode", "omp", "managed opencode/omp/herdr configs"]

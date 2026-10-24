@@ -38,6 +38,84 @@
   when: ansible_facts.os_family != 'Windows'
   ignore_errors: true
 
+- name: Ensure ~/.local/bin exists for github cli
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    state: directory
+    mode: "0755"
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
+- name: Get latest GitHub CLI release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/cli/cli/releases/latest
+    return_content: true
+  register: gh_latest_release
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
+- name: Set GitHub CLI download metadata
+  ansible.builtin.set_fact:
+    gh_release_version: "{{ gh_latest_release.json.tag_name | regex_replace('^v', '') }}"
+    gh_os_name: "{{ 'macOS' if ansible_facts.system == 'Darwin' else 'linux' }}"
+    gh_arch_name: "{{ 'arm64' if ansible_facts.architecture in ['arm64', 'aarch64'] else 'amd64' }}"
+    gh_archive_ext: "{{ 'zip' if ansible_facts.system == 'Darwin' else 'tar.gz' }}"
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
+- name: Download GitHub CLI binary release
+  ansible.builtin.get_url:
+    url: "https://github.com/cli/cli/releases/download/v{{ gh_release_version }}/gh_{{ gh_release_version }}_{{ gh_os_name }}_{{ gh_arch_name }}.{{ gh_archive_ext }}"
+    dest: "/tmp/gh_{{ gh_release_version }}.{{ gh_archive_ext }}"
+    mode: "0644"
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
+- name: Extract GitHub CLI binary
+  ansible.builtin.shell: |
+    set -eu
+    archive="/tmp/gh_{{ gh_release_version }}.{{ gh_archive_ext }}"
+    tmpdir="$(mktemp -d)"
+    if [ "{{ gh_archive_ext }}" = "zip" ]; then
+      unzip -q "$archive" -d "$tmpdir"
+    else
+      tar -xzf "$archive" -C "$tmpdir"
+    fi
+    bin="$(find "$tmpdir" -type f -name gh | head -n 1)"
+    install -m 0755 "$bin" "{{ lookup('env', 'HOME') }}/.local/bin/gh"
+    rm -rf "$tmpdir"
+  args:
+    executable: /bin/bash
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
+- name: Register downloaded github cli path
+  ansible.builtin.set_fact:
+    gh_path:
+      rc: 0
+      stdout: "{{ lookup('env', 'HOME') }}/.local/bin/gh"
+      stderr: ""
+  when:
+    - ansible_facts.os_family != 'Windows'
+    - ansible_facts.system in ['Darwin', 'Linux']
+    - gh_path.rc | default(1) != 0
+    - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
+
 - name: .gitconfig
   ansible.builtin.blockinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitconfig"

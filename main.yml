@@ -177,8 +177,6 @@
       block:
         - name: Manage ai dev tools packages
           ansible.builtin.import_tasks: tasks/ai-dev-tools.yml
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
       rescue:
         - name: Warn about ai dev tools install failure
           ansible.builtin.debug:

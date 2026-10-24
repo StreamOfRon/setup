@@ -75,7 +75,6 @@ dev_gui_casks:
 
 install_ai_dev_tools: false
 ai_dev_tools_formulae:
-  - herdr
   - worktrunk
   - fzf
   - node
