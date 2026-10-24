@@ -90,6 +90,11 @@
       "action": "shell",
       "resource": "kubectl readonly *",
       "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl kustomize *",
+      "effect": "allow"
     }
   ],
   "providers": {

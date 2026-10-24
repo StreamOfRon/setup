@@ -32,6 +32,10 @@ bash:
       approval: allow
     - match: "kubectl readonly"
       approval: allow
+    - match: "kubectl kustomize *"
+      approval: allow
+    - match: "kubectl kustomize"
+      approval: allow
     - match: "kubectl *"
       approval: prompt
     - match: "kubectl"
