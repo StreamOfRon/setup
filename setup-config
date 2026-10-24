@@ -847,7 +847,7 @@ def is_editable(item, config) -> bool:
 def item_badges(item, brew_available: bool, is_macos: bool, apt_available: bool = False) -> List[str]:
     """Return list of badge strings for an item."""
     badges = []
-    if item.requires in ("homebrew", "darwin") and not brew_available and not (item.requires == "homebrew" and apt_available):
+    if item.requires in ("homebrew", "darwin") and not brew_available:
         badges.append("needs Homebrew")
     if item.requires == "apt" and not apt_available:
         badges.append("needs apt")
