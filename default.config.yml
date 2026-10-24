@@ -51,6 +51,7 @@ kube_taps: []
 kube_formulae:
   - argocd
   - kubernetes-cli
+  - krew
   - kubectx
 kube_casks:
   - freelens

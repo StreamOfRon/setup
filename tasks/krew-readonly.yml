@@ -1,0 +1,25 @@
+# Install kubectl-readonly via krew. Krew and kubernetes-cli are managed by the
+# Kubernetes package group; this task only installs the plugins themselves.
+# Krew's binaries live in ~/.krew/bin, which is appended to PATH by the zshrc
+# template when that directory exists.
+
+- name: Determine whether kubectl-readonly should be managed
+  ansible.builtin.set_fact:
+    krew_readonly_selected: "{{ (install_kube_apps | default(false)) == true }}"
+    krew_readonly_unselected: "{{ (install_kube_apps | default(false)) == false }}"
+
+- name: Install the krew (self) plugin
+  ansible.builtin.command: kubectl krew install krew
+  changed_when: false
+  when: krew_readonly_selected
+
+- name: Install the readonly plugin
+  ansible.builtin.command: kubectl krew install readonly
+  changed_when: false
+  when: krew_readonly_selected
+
+- name: Uninstall the readonly plugin
+  ansible.builtin.command: kubectl krew uninstall readonly
+  failed_when: false
+  changed_when: false
+  when: krew_readonly_unselected

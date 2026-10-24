@@ -1,7 +1,14 @@
 export PATH="/usr/local/sbin:$PATH"
 export PATH="/usr/local/opt/mysql-client/bin:$PATH"
-export PATH="$PATH:$HOME/bin:$HOME/go/bin"
+export PATH="$PATH:$HOME/bin"
 export PATH="$HOME/.local/bin:$PATH"
+# Put `go install` binaries in ~/.local/bin (already on PATH above) instead
+# of the default $GOPATH/bin, so no extra PATH entry is needed.
+export GOPATH="${GOPATH:-$HOME/go}"
+export GOBIN="$HOME/.local/bin"
+if [[ -d "$HOME/.krew/bin" ]]; then
+  export PATH="$PATH:$HOME/.krew/bin"
+fi
 if [[ -d "$HOME/.local/share/default-venv/bin" ]]; then
   export PATH="$HOME/.local/share/default-venv/bin:$PATH"
 fi

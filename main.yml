@@ -184,6 +184,10 @@
           ansible.builtin.debug:
             msg: "Failed to manage ai dev tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
+    - name: Manage kubectl-readonly via krew
+      ansible.builtin.import_tasks: tasks/krew-readonly.yml
+      when: ansible_facts.pkg_mgr == "homebrew"
+
     - name: Manage common cli tools
       block:
         - name: Manage common cli tools packages
