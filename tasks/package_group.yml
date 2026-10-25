@@ -5,20 +5,17 @@
 - name: Resolve package lists for {{ groupname }}
   ansible.builtin.import_tasks: tasks/package_resolve.yml
 
+# Note: enabled, groupname, casks and taps are inherited in scope by the
+# imported files; restating them here with the same name would cause a
+# recursive-loop templating error at runtime. Only renames are declared.
 - name: Manage Homebrew packages for {{ groupname }}
   ansible.builtin.import_tasks: tasks/homebrew_packages.yml
   vars:
-    enabled: "{{ enabled }}"
-    groupname: "{{ groupname }}"
-    taps: "{{ taps | default([]) }}"
     formulae: "{{ _group_formulae }}"
-    casks: "{{ casks | default([]) }}"
   when: brew_available | bool
 
 - name: Manage apt fallback packages for {{ groupname }}
   ansible.builtin.import_tasks: tasks/apt_packages.yml
   vars:
-    enabled: "{{ enabled }}"
-    groupname: "{{ groupname }}"
     packages: "{{ _group_apt_packages }}"
   when: ansible_facts.pkg_mgr == "apt"
