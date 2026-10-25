@@ -4,7 +4,7 @@
   changed_when: false
   failed_when: false
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
 
 - name: Check for worktrunk binary
   ansible.builtin.command: which wt
@@ -12,7 +12,7 @@
   changed_when: false
   failed_when: false
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
 
 - name: Check for cargo binary
   ansible.builtin.command: which cargo
@@ -20,7 +20,7 @@
   changed_when: false
   failed_when: false
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
 
 - name: Check for fzf binary
   ansible.builtin.command: which fzf
@@ -35,7 +35,7 @@
   environment:
     RUSTUP_HOME: "{{ lookup('env', 'HOME') }}/.local/share/rustup"
     CARGO_HOME: "{{ lookup('env', 'HOME') }}/.local"
-    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
   changed_when: false
   when:
     - worktrunk_binary.rc | default(1) != 0

@@ -18,7 +18,7 @@
   ansible.builtin.command:
     cmd: >-
       mv {{ lookup('env', 'HOME') }}/.oh-my-zsh
-      {{ lookup('env', 'HOME') }}/.oh-my-zsh.incomplete-{{ ansible_date_time.epoch }}
+      {{ lookup('env', 'HOME') }}/.oh-my-zsh.incomplete-{{ ansible_facts.date_time.epoch }}
   args:
     removes: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
   when:

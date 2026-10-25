@@ -24,7 +24,7 @@
   args:
     creates: "{{ lookup('env', 'HOME') }}/.krew/bin/kubectl-krew"
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
   changed_when: false
   when:
     - krew_readonly_selected
@@ -35,7 +35,7 @@
   args:
     creates: "{{ lookup('env', 'HOME') }}/.krew/bin/kubectl-readonly"
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
   changed_when: false
   when:
     - krew_readonly_selected
@@ -44,7 +44,7 @@
 - name: Uninstall the readonly plugin
   ansible.builtin.command: kubectl krew uninstall readonly
   environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
   failed_when: false
   changed_when: false
   when:
