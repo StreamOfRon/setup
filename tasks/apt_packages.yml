@@ -1,12 +1,9 @@
-# Apt (Debian/Ubuntu) package management for a group.
+# Apt (Debian/Ubuntu) fallback for a package group.
 #
-# Unlike the Homebrew path (formulae + casks), apt uses a single list of
-# package names provided via `packages`.
-#
-# The apt module needs root (become), which is only available when a become
-# password is supplied; unattended runs therefore skip these tasks. We also
-# consult the dpkg snapshot gathered once in main.yml so apt is only invoked
-# when something actually needs to change.
+# Groups run Homebrew first (tasks/package_group.yml); when the group is
+# enabled, `packages` already excludes anything Homebrew provides. On removal
+# (enabled false) the full apt list is passed so packages installed by either
+# manager are cleaned up.
 - name: Apt packages for {{ groupname }}
   when:
     - enabled != "ignore"
