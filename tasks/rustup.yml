@@ -8,6 +8,14 @@
   changed_when: false
   when: install_dev_cli_tools | default(false) == true
 
+- name: Bootstrap rustup default stable toolchain
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/rustup default stable"
+  environment:
+    RUSTUP_HOME: "{{ lookup('env', 'HOME') }}/.local/share/rustup"
+    CARGO_HOME: "{{ lookup('env', 'HOME') }}/.local"
+  changed_when: false
+  when: install_dev_cli_tools | default(false) == true
+
 - name: Remove rustup toolchain
   ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/rustup self uninstall -y"
   environment:
