@@ -279,4 +279,8 @@ terraform.rc
 # Ignore superpowers planning/spec artifacts
 docs/superpowers/**
 
+### OpenCode Playwright ###
+# Browser automation artifacts created by the Playwright MCP server
+.playwright-mcp/
+
 # End of https://www.toptal.com/developers/gitignore/api/linux,python,terraform,macos,ansible,git
