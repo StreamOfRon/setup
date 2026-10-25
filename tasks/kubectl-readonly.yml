@@ -4,7 +4,6 @@
 # template when that directory exists.
 #
 # When Homebrew is not available, krew itself is installed first via tasks/krew.yml.
-
 - name: Determine whether kubectl-readonly should be managed
   ansible.builtin.set_fact:
     krew_readonly_selected: "{{ (install_kube_apps | default(false)) == true }}"
@@ -13,18 +12,41 @@
 - name: Ensure krew is installed
   ansible.builtin.import_tasks: tasks/krew.yml
 
+- name: Check for kubectl binary
+  ansible.builtin.command: which kubectl
+  register: kubectl_binary
+  changed_when: false
+  failed_when: false
+  when: krew_readonly_selected
+
 - name: Install the krew (self) plugin
   ansible.builtin.command: kubectl krew install krew
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.krew/bin/kubectl-krew"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
   changed_when: false
-  when: krew_readonly_selected
+  when:
+    - krew_readonly_selected
+    - kubectl_binary.rc | default(1) == 0
 
 - name: Install the readonly plugin
   ansible.builtin.command: kubectl krew install readonly
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.krew/bin/kubectl-readonly"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
   changed_when: false
-  when: krew_readonly_selected
+  when:
+    - krew_readonly_selected
+    - kubectl_binary.rc | default(1) == 0
 
 - name: Uninstall the readonly plugin
   ansible.builtin.command: kubectl krew uninstall readonly
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.krew/bin:{{ ansible_env.PATH | default(lookup('env', 'PATH')) }}"
   failed_when: false
   changed_when: false
-  when: krew_readonly_unselected
+  when:
+    - krew_readonly_unselected
+    - kubectl_binary.rc | default(1) == 0
