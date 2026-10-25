@@ -71,8 +71,14 @@ class MenuTests(unittest.TestCase):
     def test_categories_and_counts(self):
         self.assertEqual([c.id for c in self.menu.categories], ["groups", "system", "macos"])
         self.assertEqual(len(self.menu.categories[0].items), 11)
-        self.assertEqual(len(self.menu.categories[1].items), 7)
+        self.assertEqual(len(self.menu.categories[1].items), 8)
         self.assertEqual(len(self.menu.categories[2].items), 4)
+
+    def test_prefer_homebrew_toggle(self):
+        items = {i.key: i for c in self.menu.categories for i in c.items}
+        self.assertIn("prefer_homebrew", items)
+        self.assertEqual(items["prefer_homebrew"].kind, "bool")
+        self.assertIs(self.defaults["prefer_homebrew"], True)
 
     def test_package_keys_cover_read_only_lists(self):
         self.assertIn("agent_python_packages", self.menu.package_keys)

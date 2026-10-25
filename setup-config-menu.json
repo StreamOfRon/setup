@@ -157,6 +157,11 @@
           "type": "bool"
         },
         {
+          "key": "prefer_homebrew",
+          "label": "Prefer Homebrew over apt",
+          "type": "bool"
+        },
+        {
           "key": "agent_python",
           "label": "Agent Python venv",
           "type": "bool",
