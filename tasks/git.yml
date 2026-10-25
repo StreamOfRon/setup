@@ -1,23 +1,24 @@
 # Ensure git is always installed. git is a hard dependency of ansible-pull
 # (and of many other tasks), so it must not be tied to an optional group.
 #
-# On apt systems installation requires root (become). Such tasks cannot run
-# unattended without a sudo password, so they are gated on
-# ansible_become_password being defined. We also skip the install when git is
-# already present (per the dpkg snapshot gathered once in main.yml).
+# Homebrew wins whenever it is available. apt is used only when brew is not
+# preferred/available, and then only with a sudo password and when dpkg does
+# not already have git.
 - name: Ensure git is installed (Homebrew)
   when:
-    - ansible_facts.pkg_mgr == "homebrew"
+    - brew_available | bool
     - "'git' not in (installed_brew_formulae.stdout_lines | default([]))"
   block:
     - name: Ensure git is installed (Homebrew)
       community.general.homebrew:
         name: git
         state: present
+        path: "{{ brew_bin_dir }}"
 
 - name: Ensure git is installed (apt)
   when:
     - ansible_facts.pkg_mgr == "apt"
+    - not (brew_available | bool)
     - ansible_become_password is defined
     - "'git' not in (installed_apt_packages.stdout_lines | default([]))"
   block:

@@ -1,6 +1,6 @@
 # Install krew itself. All krew setup lives here:
 #   - Homebrew systems: manage the `krew` formula via Homebrew.
-#   - Other systems: follow the manual instructions at
+#   - Systems without Homebrew: follow the manual instructions at
 #     https://krew.sigs.k8s.io/docs/user-guide/setup/install/.
 
 - name: Manage krew via Homebrew
@@ -13,16 +13,16 @@
       - krew
     casks: []
   when:
-    - ansible_facts.pkg_mgr == "homebrew"
+    - brew_available | bool
 
-- name: Ensure git is installed (krew prerequisite, non-Homebrew)
+- name: Ensure git is installed (krew prerequisite, no Homebrew)
   when:
     - install_kube_apps | default(false) == true
-    - ansible_facts.pkg_mgr != "homebrew"
+    - not (brew_available | bool)
     - ansible_become_password is defined
     - "'git' not in (installed_apt_packages.stdout_lines | default([]))"
   block:
-    - name: Ensure git is installed (krew prerequisite, non-Homebrew)
+    - name: Ensure git is installed (krew prerequisite, no Homebrew)
       ansible.builtin.apt:
         name: git
         state: present
@@ -43,4 +43,4 @@
   changed_when: false
   when:
     - install_kube_apps | default(false) == true
-    - ansible_facts.pkg_mgr != "homebrew"
+    - not (brew_available | bool)
