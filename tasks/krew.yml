@@ -16,13 +16,17 @@
     - ansible_facts.pkg_mgr == "homebrew"
 
 - name: Ensure git is installed (krew prerequisite, non-Homebrew)
-  ansible.builtin.apt:
-    name: git
-    state: present
-  become: true
   when:
     - install_kube_apps | default(false) == true
     - ansible_facts.pkg_mgr != "homebrew"
+    - ansible_become_password is defined
+    - "'git' not in (installed_apt_packages.stdout_lines | default([]))"
+  block:
+    - name: Ensure git is installed (krew prerequisite, non-Homebrew)
+      ansible.builtin.apt:
+        name: git
+        state: present
+      become: true
 
 - name: Install krew via manual instructions (non-Homebrew)
   ansible.builtin.shell: |

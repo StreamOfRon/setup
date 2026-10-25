@@ -1,0 +1,8 @@
+# Snapshot of packages currently installed via dpkg/apt. Queried once and
+# reused as a condition by every apt task so we never invoke sudo (or even
+# the apt module) when there is nothing to do.
+- name: Get list of installed apt packages
+  ansible.builtin.command: dpkg-query -W -f='${binary:Package}\n'  # noqa: command-instead-of-module
+  register: installed_apt_packages
+  changed_when: false
+  failed_when: false

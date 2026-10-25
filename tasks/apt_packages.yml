@@ -2,13 +2,23 @@
 #
 # Unlike the Homebrew path (formulae + casks), apt uses a single list of
 # package names provided via `packages`.
+#
+# The apt module needs root (become), which is only available when a become
+# password is supplied; unattended runs therefore skip these tasks. We also
+# consult the dpkg snapshot gathered once in main.yml so apt is only invoked
+# when something actually needs to change.
 - name: Apt packages for {{ groupname }}
-  ansible.builtin.apt:
-    name: "{{ packages }}"
-    state: '{{ enabled | ternary("present", "absent") }}'
-    update_cache: false
-  become: true
   when:
     - enabled != "ignore"
     - packages is defined
     - packages | length > 0
+    - ansible_become_password is defined
+    - packages | difference(installed_apt_packages.stdout_lines | default([])) | length > 0 or
+      (packages | intersect(installed_apt_packages.stdout_lines | default([])) | length > 0 and not enabled)
+  block:
+    - name: Apt packages for {{ groupname }}
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: '{{ enabled | ternary("present", "absent") }}'
+        update_cache: false
+      become: true

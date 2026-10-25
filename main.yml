@@ -21,6 +21,16 @@
     - name: Ensure uv is installed
       ansible.builtin.import_tasks: tasks/uv.yml
 
+    - name: Get list of installed packages
+      block:
+        - name: Get installed homebrew packages
+          ansible.builtin.import_tasks: tasks/homebrew_list.yml
+          when: ansible_facts.pkg_mgr == "homebrew"
+
+        - name: Get installed apt packages
+          ansible.builtin.import_tasks: tasks/apt_list.yml
+          when: ansible_facts.pkg_mgr == "apt"
+
     - name: Ensure git is installed
       ansible.builtin.import_tasks: tasks/git.yml
 
@@ -35,13 +45,9 @@
           ansible.builtin.apt:
             update_cache: true
           become: true
-          when: ansible_facts.pkg_mgr == "apt"
-
-    - name: Get list of installed packages
-      block:
-        - name: Get installed homebrew packages
-          ansible.builtin.import_tasks: tasks/homebrew_list.yml
-          when: ansible_facts.pkg_mgr == "homebrew"
+          when:
+            - ansible_facts.pkg_mgr == "apt"
+            - ansible_become_password is defined
 
   tasks:
     - name: Install setup-config command
