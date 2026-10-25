@@ -22,34 +22,23 @@ case "${OS}" in
   fi
 
   NONINTERACTIVE=1
-  $BREW install ansible git flock
+  $BREW install ansible git flock </dev/null
   ;;
 
 "Linux")
-  SUPPORTED=('apt' 'pamac')
-  PKGMGR=""
-  for name in $SUPPORTED ; do
-    PKGMGR=$(which ${name})
-    if [[ $? == 0 ]] ; then
-      case "${name}" in
-      "apt")
-        sudo $PKGMGR update
-        sudo $PKGMGR install ansible git
-        ;;
-
-      "pamac")
-        $PKGMGR update
-        $PKGMGR install ansible git flock
-        ;;
-
-      *)
-        echo "No supported package manager for Linux detected"
-        exit 1
-        ;;
-      esac
-    fi
-  done
-
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible git </dev/null
+  elif command -v apt >/dev/null 2>&1; then
+    sudo apt update
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y ansible git </dev/null
+  elif command -v pamac >/dev/null 2>&1; then
+    pamac update --no-confirm </dev/null
+    pamac install --no-confirm ansible git flock </dev/null
+  else
+    echo "No supported package manager for Linux detected"
+    exit 1
+  fi
   ;;
 
 *)
@@ -59,4 +48,7 @@ case "${OS}" in
 esac
 
 mkdir -p $SETUPDIR
-curl -fsSL https://raw.githubusercontent.com/StreamOfRon/setup/main/run-ansible-pull.sh | zsh
+RUN_ANSIBLE_PULL="$(mktemp)"
+curl -fsSL https://raw.githubusercontent.com/StreamOfRon/setup/main/run-ansible-pull.sh -o "$RUN_ANSIBLE_PULL"
+zsh "$RUN_ANSIBLE_PULL"
+rm -f "$RUN_ANSIBLE_PULL"
