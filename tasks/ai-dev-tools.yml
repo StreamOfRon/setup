@@ -25,16 +25,22 @@
 
 - name: Install opencode via official script
   ansible.builtin.shell: curl -fsSL https://opencode.ai/v2/install | bash
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.opencode/bin/opencode"
   changed_when: false
   when: install_ai_dev_tools | default(false) == true
 
 - name: Install omp via official script
   ansible.builtin.shell: curl -fsSL https://omp.sh/install | sh
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/omp"
   changed_when: false
   when: install_ai_dev_tools | default(false) == true
 
 - name: Install herdr via official script
   ansible.builtin.shell: curl -fsSL https://herdr.dev/install.sh | sh
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/herdr"
   changed_when: false
   when: install_ai_dev_tools | default(false) == true
 
