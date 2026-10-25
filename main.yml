@@ -21,6 +21,9 @@
     - name: Ensure uv is installed
       ansible.builtin.import_tasks: tasks/uv.yml
 
+    - name: Ensure git is installed
+      ansible.builtin.import_tasks: tasks/git.yml
+
     - name: Update package managers
       block:
         - name: Update homebrew packages
@@ -332,3 +335,6 @@
         - name: Warn about other packages install failure
           ansible.builtin.debug:
             msg: "Failed to manage other packages, continuing: {{ ansible_failed_result | default('unknown error') }}"
+
+    - name: Ensure git is installed (final)
+      ansible.builtin.import_tasks: tasks/git.yml

@@ -72,14 +72,12 @@ install_dev_cli_tools: false
 dev_cli_formulae:
   - ansible-lint
   - gh
-  - git
   - pre-commit
   - yq
 dev_cli_casks: []
 dev_cli_apt_packages:
   - ansible-lint
   - gh
-  - git
   - pre-commit
   - yq
 
