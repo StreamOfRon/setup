@@ -1,0 +1,26 @@
+# Compute the effective Homebrew and apt package lists for a group.
+# Side-effect free so tests/test_package_precedence.yml can exercise it.
+- name: Resolve effective package lists for {{ groupname }}
+  ansible.builtin.set_fact:
+    _group_formulae: >-
+      {{ (formulae | default([]) +
+          (apt_packages | default([]) | intersect(available_brew_formulae.stdout_lines | default([]))))
+         | unique }}
+
+- name: Resolve Homebrew coverage for {{ groupname }}
+  ansible.builtin.set_fact:
+    _group_brew_present: >-
+      {{ (_group_formulae + (installed_brew_formulae.stdout_lines | default([]))) | unique }}
+
+- name: Resolve aliases covered by Homebrew for {{ groupname }}
+  ansible.builtin.set_fact:
+    _group_apt_covered: >-
+      {{ brew_apt_equivalents | default({}) | dict2items
+         | selectattr('value', 'in', _group_brew_present)
+         | map(attribute='key') | list }}
+
+- name: Resolve apt fallback packages for {{ groupname }}
+  ansible.builtin.set_fact:
+    _group_apt_packages: >-
+      {{ ((apt_packages | default([])) | difference(_group_apt_covered) | difference(_group_brew_present))
+         if enabled == true else (apt_packages | default([])) }}
