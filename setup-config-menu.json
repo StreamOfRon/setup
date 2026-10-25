@@ -63,6 +63,12 @@
             "dev_cli_formulae",
             "dev_cli_casks",
             "dev_cli_apt_packages"
+          ],
+          "extras": [
+            "rustup"
+          ],
+          "removals": [
+            "rustup"
           ]
         },
         {

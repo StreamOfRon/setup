@@ -1,0 +1,30 @@
+# Rust toolchain via rustup, installed into ~/.local (cargo bin -> ~/.local/bin).
+# Gated on the dev CLI tools group's three-valued toggle.
+- name: Install rustup via official script
+  ansible.builtin.shell: curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  environment:
+    RUSTUP_HOME: "{{ lookup('env', 'HOME') }}/.local/share/rustup"
+    CARGO_HOME: "{{ lookup('env', 'HOME') }}/.local"
+  changed_when: false
+  when: install_dev_cli_tools | default(false) == true
+
+- name: Remove rustup toolchain
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/rustup self uninstall -y"
+  environment:
+    RUSTUP_HOME: "{{ lookup('env', 'HOME') }}/.local/share/rustup"
+    CARGO_HOME: "{{ lookup('env', 'HOME') }}/.local"
+  changed_when: false
+  failed_when: false
+  when: install_dev_cli_tools | default(false) == false
+
+- name: Remove rustup home directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/rustup"
+    state: absent
+  when: install_dev_cli_tools | default(false) == false
+
+- name: Remove rustup binary (fallback)
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/rustup"
+    state: absent
+  when: install_dev_cli_tools | default(false) == false

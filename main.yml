@@ -212,6 +212,9 @@
             packages: "{{ dev_cli_apt_packages }}"
           when:
             - ansible_facts.pkg_mgr == "apt"
+
+        - name: Manage rustup toolchain
+          ansible.builtin.import_tasks: tasks/rustup.yml
       rescue:
         - name: Warn about dev cli tools install failure
           ansible.builtin.debug:

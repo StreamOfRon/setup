@@ -6,6 +6,12 @@ export PATH="$HOME/.local/bin:$PATH"
 # of the default $GOPATH/bin, so no extra PATH entry is needed.
 export GOPATH="${GOPATH:-$HOME/go}"
 export GOBIN="$HOME/.local/bin"
+{% if install_dev_cli_tools | default(false) != false %}
+# Rust toolchain (rustup) installs cargo/rustc into ~/.local/bin; keep its
+# homes under ~/.local so no separate cargo bin PATH entry is needed.
+export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.local/share/rustup}"
+export CARGO_HOME="${CARGO_HOME:-$HOME/.local}"
+{% endif %}
 if [[ -d "$HOME/.krew/bin" ]]; then
   export PATH="$PATH:$HOME/.krew/bin"
 fi
