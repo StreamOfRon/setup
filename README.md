@@ -24,6 +24,10 @@ the arrow keys (or `h`/`j`/`k`/`l`) to move between categories and options,
 `Enter` to toggle or edit a value, `r` to reset an option, `a` to apply the
 playbook, and `q` to quit. Changes are written to `~/.setup-options`.
 
+`prefer_homebrew` (default on) makes the playbook use Homebrew formulae
+ahead of apt when both are available; apt is used only for packages
+Homebrew does not provide.
+
 The tool is a standalone Python script with its dependencies declared inline
 (PEP 723). It runs under [uv](https://docs.astral.sh/uv/), which the playbook
 installs as a prerequisite.

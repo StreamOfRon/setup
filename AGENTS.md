@@ -43,6 +43,20 @@ the `setup-config` TUI.
 - Homebrew already follows this pattern with `tasks/homebrew_list.yml`
   (`installed_brew_formulae`, `installed_brew_casks`, `brew_taps`).
 
+### Package manager precedence
+- Prefer Homebrew whenever `brew` is available, even on Linux where
+  `ansible_facts.pkg_mgr` reports `apt`. `tasks/package_manager.yml` sets
+  `brew_available`; gate brew tasks on `brew_available | bool`, never on
+  `pkg_mgr == "homebrew"`.
+- Group dispatch lives in `tasks/package_group.yml`: Homebrew formulae run
+  first, apt supplies only packages Homebrew cannot, and casks run only on
+  macOS.
+- `brew_apt_equivalents` in `default.config.yml` maps apt names to brew
+  formulae that use a different name. Same-name packages are covered
+  automatically from `brew formulae`.
+- Set `prefer_homebrew: false` to force apt on a Linux machine that has
+  Homebrew installed.
+
 ### Blocks for repeated conditions
 - When several tasks share the same conditional check, wrap them in a
   `block:` with the `when:` at the block level so evaluation happens once.
