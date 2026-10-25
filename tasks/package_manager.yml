@@ -1,0 +1,30 @@
+# Resolve whether Homebrew should win over apt. On Linux, Ansible reports
+# pkg_mgr == "apt" even when Linuxbrew is installed, so brew detection must be
+# independent of pkg_mgr.
+- name: Locate Homebrew
+  ansible.builtin.command:
+    cmd: which brew
+  environment:
+    PATH: >-
+      {{ lookup('env', 'HOME') }}/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH | default('/usr/bin:/bin') }}
+  register: brew_lookup
+  changed_when: false
+  failed_when: false
+
+- name: Record Homebrew availability
+  ansible.builtin.set_fact:
+    brew_bin: "{{ brew_lookup.stdout | trim }}"
+    brew_bin_dir: "{{ (brew_lookup.stdout | trim) | dirname }}"
+    brew_available: >-
+      {{ (brew_lookup.rc | default(1)) == 0
+         and (brew_lookup.stdout | trim | length > 0)
+         and ((prefer_homebrew | default(true) | bool) or ansible_facts.pkg_mgr == "homebrew") }}
+
+# Keep every later expression free of undefined-variable handling.
+- name: Initialise empty Homebrew package lists
+  ansible.builtin.set_fact:
+    installed_brew_formulae: {stdout_lines: []}
+    installed_brew_casks: {stdout_lines: []}
+    brew_taps: {stdout_lines: []}
+    available_brew_formulae: {stdout_lines: []}
+  when: not (brew_available | bool)

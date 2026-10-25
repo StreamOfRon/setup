@@ -1,0 +1,23 @@
+- name: Homebrew detection
+  hosts: localhost
+  gather_facts: true
+  tasks:
+    - name: Detect with Homebrew preferred
+      ansible.builtin.import_tasks: ../tasks/package_manager.yml
+      vars:
+        prefer_homebrew: true
+
+    - name: Assert detection matches brew presence
+      ansible.builtin.assert:
+        that:
+          - (brew_available | bool) == (brew_bin | length > 0)
+
+    - name: Detect with Homebrew not preferred
+      ansible.builtin.import_tasks: ../tasks/package_manager.yml
+      vars:
+        prefer_homebrew: false
+
+    - name: Assert preference only disables brew where apt is an alternative
+      ansible.builtin.assert:
+        that:
+          - (brew_available | bool) == ((brew_bin | length > 0) and ansible_facts.pkg_mgr == "homebrew")

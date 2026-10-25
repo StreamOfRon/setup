@@ -18,6 +18,9 @@
         file: "{{ lookup('env', 'HOME') }}/.setup-options"
       when: local_options_file.stat.exists
 
+    - name: Resolve package manager preference
+      ansible.builtin.import_tasks: tasks/package_manager.yml
+
     - name: Ensure uv is installed
       ansible.builtin.import_tasks: tasks/uv.yml
 
@@ -25,7 +28,7 @@
       block:
         - name: Get installed homebrew packages
           ansible.builtin.import_tasks: tasks/homebrew_list.yml
-          when: ansible_facts.pkg_mgr == "homebrew"
+          when: brew_available | bool
 
         - name: Get installed apt packages
           ansible.builtin.import_tasks: tasks/apt_list.yml
@@ -39,7 +42,8 @@
         - name: Update homebrew packages
           community.general.homebrew:
             update_homebrew: true
-          when: ansible_facts.pkg_mgr == "homebrew"
+            path: "{{ brew_bin_dir }}"
+          when: brew_available | bool
 
         - name: Update apt cache
           ansible.builtin.apt:

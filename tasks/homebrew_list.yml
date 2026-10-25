@@ -1,14 +1,21 @@
 - name: Get list of installed formulae
-  ansible.builtin.command: brew list --formulae -1
+  ansible.builtin.command: "{{ brew_bin }} list --formulae -1"
   register: installed_brew_formulae
   changed_when: false
 
 - name: Get list of installed casks
-  ansible.builtin.command: brew list --casks -1
+  ansible.builtin.command: "{{ brew_bin }} list --casks -1"
   register: installed_brew_casks
   changed_when: false
 
 - name: Get list of taps
-  ansible.builtin.command: brew tap
+  ansible.builtin.command: "{{ brew_bin }} tap"
   register: brew_taps
   changed_when: false
+
+# Used to promote apt package names that have a same-named brew formula.
+- name: Get list of available formulae
+  ansible.builtin.command: "{{ brew_bin }} formulae"
+  register: available_brew_formulae
+  changed_when: false
+  failed_when: false
