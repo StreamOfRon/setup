@@ -99,6 +99,7 @@ ai_dev_tools_casks: []
 ai_dev_tools_apt_packages:
   - fzf
   - nodejs
+  - npm
 
 install_common_cli_tools: false
 common_cli_formulae:

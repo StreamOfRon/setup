@@ -120,12 +120,23 @@
 
 # --- skills are additive: installed under true, never removed by this group ---
 
+- name: Check for npx binary
+  ansible.builtin.command: which npx
+  register: npx_binary
+  changed_when: false
+  failed_when: false
+  when: install_ai_dev_tools | default(false) == true
+
 - name: Install agent skills (StreamOfRon/agent-skills)
   ansible.builtin.command: npx -y skills add -g StreamOfRon/agent-skills
   changed_when: false
-  when: install_ai_dev_tools | default(false) == true
+  when:
+    - install_ai_dev_tools | default(false) == true
+    - npx_binary.rc | default(1) == 0
 
 - name: Install agent skills (crusty-old-engineer)
   ansible.builtin.command: npx -y skills add -g microsoft/amplifier-bundle-skills --skill crusty-old-engineer
   changed_when: false
-  when: install_ai_dev_tools | default(false) == true
+  when:
+    - install_ai_dev_tools | default(false) == true
+    - npx_binary.rc | default(1) == 0
