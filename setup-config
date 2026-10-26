@@ -664,9 +664,13 @@ def validate_menu(menu: Menu, defaults: Mapping[str, object]) -> List[str]:
     return errors
 
 
-def build_apply_command(executable: str) -> List[str]:
+def build_apply_command(executable: str, *, ask_become_pass: bool = False) -> List[str]:
     """Build the ansible-playbook command list."""
-    return [executable, "-i", "localhost,", "-c", "local", "main.yml"]
+    command = [executable, "-i", "localhost,", "-c", "local"]
+    if ask_become_pass:
+        command.append("--ask-become-pass")
+    command.append("main.yml")
+    return command
 
 
 def find_ansible_playbook(which=shutil.which, is_executable=os.access) -> Optional[str]:
@@ -687,7 +691,8 @@ def find_ansible_playbook(which=shutil.which, is_executable=os.access) -> Option
 
 
 def apply_playbook(repo_root: Path, *, runner=None, which=shutil.which,
-                   is_executable=os.access, out=None) -> int:
+                   is_executable=os.access, out=None,
+                   ask_become_pass: bool = False) -> int:
     """Run the ansible playbook. Returns exit code."""
     if out is None:
         out = print
@@ -704,7 +709,7 @@ def apply_playbook(repo_root: Path, *, runner=None, which=shutil.which,
            "Install it or ensure it is on PATH.")
         return 127
 
-    cmd = build_apply_command(ansible_path)
+    cmd = build_apply_command(ansible_path, ask_become_pass=ask_become_pass)
     out(f"Running: {' '.join(cmd)}")
     out(f"Directory: {repo_root}")
 
@@ -1306,11 +1311,22 @@ def run_tui(config, menu):
                 if not confirmed:
                     notify("Apply cancelled.")
                     continue
-                code = apply_playbook(REPO_ROOT)
-                if code == 0:
-                    notify("Playbook applied successfully.", 6.0)
-                else:
+                use_become = False
+                if apt or brew:
+                    use_become = yes_no_dialog(
+                        title="Allow system changes?",
+                        text=(
+                            "Some package and cask tasks need sudo. You will be "
+                            "prompted for your password. Choose No to skip them."
+                        ),
+                    ).run()
+                code = apply_playbook(REPO_ROOT, ask_become_pass=use_become)
+                if code != 0:
                     notify(f"Playbook exited with status {code}.", 8.0)
+                elif apt and not use_become:
+                    notify("Applied without sudo; package tasks were skipped.", 8.0)
+                else:
+                    notify("Playbook applied successfully.", 6.0)
                 continue
             if result[0] == "edit":
                 entry = find_item(result[1])
@@ -1356,10 +1372,21 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="setup-config")
     parser.add_argument("--apply-now", action="store_true",
                         help="Apply the playbook without opening the TUI")
+    parser.add_argument("--ask-become-pass", action="store_true",
+                        help="Prompt for a sudo password so apt tasks can run")
     args = parser.parse_args(argv)
 
+    if args.ask_become_pass and not args.apply_now:
+        parser.error("--ask-become-pass requires --apply-now")
+
     if args.apply_now:
-        return apply_playbook(REPO_ROOT)
+        if not args.ask_become_pass and apt_available():
+            print(
+                "setup-config: note: apt tasks will be skipped; pass "
+                "--ask-become-pass to install packages.",
+                file=sys.stderr,
+            )
+        return apply_playbook(REPO_ROOT, ask_become_pass=args.ask_become_pass)
 
     # Check for TTY
     if not sys.stdin.isatty() or not sys.stdout.isatty():

@@ -73,8 +73,10 @@
     - (install_dev_cli_tools | default(false) == true) or (install_ai_dev_tools | default(false) == true)
 
 - name: Download GitHub CLI binary release
+  vars:
+    gh_asset: "gh_{{ gh_release_version }}_{{ gh_os_name }}_{{ gh_arch_name }}.{{ gh_archive_ext }}"
   ansible.builtin.get_url:
-    url: "https://github.com/cli/cli/releases/download/v{{ gh_release_version }}/gh_{{ gh_release_version }}_{{ gh_os_name }}_{{ gh_arch_name }}.{{ gh_archive_ext }}"
+    url: "https://github.com/cli/cli/releases/download/v{{ gh_release_version }}/{{ gh_asset }}"
     dest: "/tmp/gh_{{ gh_release_version }}.{{ gh_archive_ext }}"
     mode: "0644"
   when:

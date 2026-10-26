@@ -41,24 +41,36 @@
     - worktrunk_binary.rc | default(1) != 0
     - cargo_binary.rc | default(1) == 0
 
+# The first check ran before cargo install. Refresh it so the plugin tasks can
+# use the binary that was just built instead of waiting for a second apply.
+- name: Refresh worktrunk binary check
+  ansible.builtin.command: which wt
+  register: worktrunk_binary
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
+
+# Config files are written whenever the group is enabled. They are harmless if
+# the matching binary is missing, and gating them on a pre-install lookup is
+# how first applies ended up only half configured.
 - name: Ensure worktrunk config directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/worktrunk"
     state: directory
-  when: worktrunk_binary.rc == 0
+    mode: "0755"
 
 - name: Manage worktrunk config
   ansible.builtin.copy:
     src: files/worktrunk-config.toml
     dest: "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"
     mode: "0644"
-  when: worktrunk_binary.rc == 0
 
 - name: Ensure herdr config directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/herdr"
     state: directory
-  when: herdr_binary.rc == 0
+    mode: "0755"
 
 # Append-only: herdr's config.toml holds user settings (theme, toasts, sound)
 - name: Manage herdr worktree keybindings
@@ -88,9 +100,9 @@
     create: true
     mode: "0644"
   when:
-    - herdr_binary.rc == 0
-    - worktrunk_binary.rc == 0
-    - fzf_binary.rc == 0
+    - herdr_binary.rc | default(1) == 0
+    - worktrunk_binary.rc | default(1) == 0
+    - fzf_binary.rc | default(1) == 0
 
 - name: Install herdr-worktrunk plugin
   ansible.builtin.command: herdr plugin install devashish2203/herdr-worktrunk --yes

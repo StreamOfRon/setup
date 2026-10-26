@@ -62,5 +62,5 @@ the `setup-config` TUI.
 ### Verification
 - Run `ansible-playbook --syntax-check -i localhost, main.yml` after edits.
 - Run `ansible-lint` on changed task files.
-- Python TUI tests: `python3 -m unittest tests.test_setup_config`.
+- Python TUI tests: `python3 -m unittest tests.test_setup_config tests.test_playbook`.
 - Push to `main` on `https://github.com/StreamOfRon/setup.git`.

@@ -28,7 +28,7 @@
         state: present
       become: true
 
-- name: Install krew via manual instructions (non-Homebrew)
+- name: Install krew via manual instructions (non-Homebrew)  # noqa: command-instead-of-module risky-shell-pipe
   ansible.builtin.shell: |
     set -e
     cd "$(mktemp -d)"

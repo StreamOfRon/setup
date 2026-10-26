@@ -206,6 +206,37 @@ class ApplyTests(unittest.TestCase):
             ["/x/ansible-playbook", "-i", "localhost,", "-c", "local", "main.yml"],
         )
 
+    def test_build_apply_command_can_request_become_password(self):
+        self.assertEqual(
+            TOOL["build_apply_command"]("/x/ansible-playbook", ask_become_pass=True),
+            [
+                "/x/ansible-playbook",
+                "-i",
+                "localhost,",
+                "-c",
+                "local",
+                "--ask-become-pass",
+                "main.yml",
+            ],
+        )
+
+    def test_apply_playbook_forwards_become_flag(self):
+        calls = []
+
+        def runner(cmd, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0)
+
+        code = TOOL["apply_playbook"](
+            ROOT,
+            runner=runner,
+            which=lambda name: "/fake/ansible-playbook",
+            out=lambda line: None,
+            ask_become_pass=True,
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("--ask-become-pass", calls[0])
+
     def test_missing_ansible_returns_127(self):
         out = []
         code = TOOL["apply_playbook"](
@@ -236,8 +267,30 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(calls[0][1]["cwd"], str(ROOT))
 
     def test_apply_now_propagates_exit_code(self):
-        with mock.patch.dict(TOOL, {"apply_playbook": lambda repo_root: 7}):
+        with mock.patch.dict(
+            TOOL,
+            {"apply_playbook": lambda repo_root, **kwargs: 7, "apt_available": lambda: False},
+        ):
             self.assertEqual(TOOL["main"](["--apply-now"]), 7)
+
+    def test_ask_become_pass_requires_apply_now(self):
+        with self.assertRaises(SystemExit) as ctx:
+            TOOL["main"](["--ask-become-pass"])
+        self.assertEqual(ctx.exception.code, 2)
+
+    def test_apply_now_propagates_ask_become_pass(self):
+        calls = []
+
+        def fake_apply(repo_root, **kwargs):
+            calls.append((repo_root, kwargs))
+            return 0
+
+        with mock.patch.dict(TOOL, {"apply_playbook": fake_apply}):
+            self.assertEqual(
+                TOOL["main"](["--apply-now", "--ask-become-pass"]), 0
+            )
+        self.assertEqual(len(calls), 1)
+        self.assertIs(calls[0][1].get("ask_become_pass"), True)
 
     def test_non_tty_interactive_mode_returns_2(self):
         with mock.patch.object(TOOL["sys"], "stdin", FakeTTY(False)):

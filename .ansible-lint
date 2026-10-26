@@ -1,0 +1,8 @@
+---
+# CI gate. The only global skip is tristate house style; deliberate
+# site-specific exceptions use inline `# noqa` so future violations fail.
+profile: basic
+skip_list:
+  # Tristate groups compare against true/false explicitly: "ignore" is a
+  # truthy string, so truthiness alone cannot express the three values.
+  - literal-compare

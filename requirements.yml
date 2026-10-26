@@ -1,0 +1,6 @@
+---
+# Collections used by main.yml. CI installs these; bootstrap gets the same
+# collections from the distribution's `ansible` package.
+collections:
+  - name: community.general
+    version: ">=13,<14"
