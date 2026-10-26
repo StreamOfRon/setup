@@ -123,6 +123,14 @@
           ]
         },
         {
+          "key": "install_ghostty",
+          "label": "Ghostty terminal",
+          "type": "tristate",
+          "extras": [
+            "ghostty_install_method"
+          ]
+        },
+        {
           "key": "install_other_apps",
           "label": "Other packages",
           "type": "tristate",

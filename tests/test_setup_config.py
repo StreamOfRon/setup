@@ -70,7 +70,7 @@ class MenuTests(unittest.TestCase):
 
     def test_categories_and_counts(self):
         self.assertEqual([c.id for c in self.menu.categories], ["groups", "system", "macos"])
-        self.assertEqual(len(self.menu.categories[0].items), 11)
+        self.assertEqual(len(self.menu.categories[0].items), 12)
         self.assertEqual(len(self.menu.categories[1].items), 7)
         self.assertEqual(len(self.menu.categories[2].items), 4)
 

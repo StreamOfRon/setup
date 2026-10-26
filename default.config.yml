@@ -117,6 +117,9 @@ aws_apt_packages:
   - awscli
   - s3cmd
 
+install_ghostty: false
+ghostty_install_method: apt
+
 install_other_apps: true
 install_other_formulae: []
 install_other_casks: []

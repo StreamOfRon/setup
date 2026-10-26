@@ -1,0 +1,103 @@
+# Ghostty terminal emulator install and configuration.
+#
+# Three-valued group semantics:
+#   true   - install and manage everything below
+#   false  - remove what this group installed
+#   ignore - skip the group entirely, leave everything as-is
+
+- name: Check for ghostty binary
+  ansible.builtin.command: which ghostty
+  register: ghostty_binary
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'HOME') }}/Applications:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
+
+# --- true: install and manage ---
+
+- name: Install ghostty via Homebrew (macOS)
+  community.general.homebrew:
+    name: ghostty
+    state: present
+  when:
+    - ansible_facts.pkg_mgr == "homebrew"
+    - install_ghostty | default(false) == true
+
+- name: Install ghostty via apt (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name: ghostty
+    state: present
+  become: true
+  when:
+    - ansible_facts.pkg_mgr == "apt"
+    - ansible_become_password is defined
+    - install_ghostty | default(false) == true
+    - ghostty_install_method | default('apt') == 'apt'
+
+- name: Install ghostty via AppImage (Ubuntu/Debian)
+  when:
+    - ansible_facts.pkg_mgr == "apt"
+    - install_ghostty | default(false) == true
+    - ghostty_install_method | default('apt') == 'appimage'
+  block:
+    - name: Determine architecture for AppImage
+      ansible.builtin.set_fact:
+        ghostty_arch: "{{ 'aarch64' if ansible_facts.machine == 'aarch64' else 'x86_64' }}"
+      when:
+        - ansible_facts.machine is defined
+
+    - name: Ensure ~/Applications directory exists
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/Applications"
+        state: directory
+        mode: "0755"
+
+    - name: Download ghostty AppImage
+      ansible.builtin.get_url:
+        url: "https://github.com/pkgforge-dev/ghostty-appimage/releases/latest/download/ghostty-{{ ghostty_arch }}.AppImage"
+        dest: "{{ lookup('env', 'HOME') }}/Applications/ghostty.AppImage"
+        mode: "0755"
+
+    - name: Ensure symlink to ghostty AppImage in ~/.local/bin
+      ansible.builtin.file:
+        src: "{{ lookup('env', 'HOME') }}/Applications/ghostty.AppImage"
+        dest: "{{ lookup('env', 'HOME') }}/.local/bin/ghostty"
+        state: link
+
+- name: Ensure Ghostty config directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/ghostty"
+    state: directory
+    mode: "0755"
+  when: ghostty_binary.rc == 0
+
+- name: Install Ghostty configuration
+  ansible.builtin.copy:
+    src: files/ghostty.conf
+    dest: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
+    mode: "0644"
+  when: ghostty_binary.rc == 0
+
+# --- false: remove what this group installed ---
+
+- name: Remove symlink to ghostty AppImage
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/ghostty"
+    state: absent
+  when:
+    - install_ghostty | default(false) == false
+    - ansible_facts.pkg_mgr == "apt"
+
+- name: Remove ghostty AppImage
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/Applications/ghostty.AppImage"
+    state: absent
+  when:
+    - install_ghostty | default(false) == false
+    - ansible_facts.pkg_mgr == "apt"
+
+- name: Remove managed Ghostty config
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
+    state: absent
+  when: install_ghostty | default(false) == false
