@@ -112,7 +112,7 @@ class TaskFileTests(unittest.TestCase):
 
         config = self.home / ".config/ghostty/config"
         self.assertTrue(config.exists(), "ghostty config was not written on first run")
-        self.assertIn("theme=dark", config.read_text())
+        self.assertIn("font-family=FiraCode Nerd Font", config.read_text())
 
     def test_ghostty_config_uses_the_macos_application_support_path(self):
         self.run_tasks(
@@ -187,6 +187,39 @@ class TaskFileTests(unittest.TestCase):
                 "packages": ["zstd"],
             },
         )
+
+
+class GhosttyConfigFileTests(unittest.TestCase):
+    """Ghostty rejects unknown keys and missing theme names at load time."""
+
+    # Options verified against https://ghostty.org/docs/config/reference.
+    KNOWN_OPTIONS = {
+        "cursor-style",
+        "font-family",
+        "shell-integration",
+        "term",
+        "window-padding-x",
+        "window-padding-y",
+    }
+
+    def options(self):
+        options = {}
+        for line in (ROOT / "files/ghostty.conf").read_text().splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            key, _, value = stripped.partition("=")
+            options[key.strip()] = value.strip()
+        return options
+
+    def test_uses_only_documented_options(self):
+        unknown = sorted(set(self.options()) - self.KNOWN_OPTIONS)
+        self.assertEqual(unknown, [], f"unknown Ghostty options: {unknown}")
+
+    def test_leaves_the_theme_to_ghostty(self):
+        # There is no built-in theme named "dark"; unset means Ghostty follows
+        # the system light/dark appearance with its own colors.
+        self.assertNotIn("theme", self.options())
 
 
 @unittest.skipUnless(yaml, "PyYAML not installed")
