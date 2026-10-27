@@ -248,8 +248,6 @@
     "aws_casks",
     "install_other_formulae",
     "install_other_casks",
-    "remove_other_formulae",
-    "remove_other_casks",
     "sync_apt_packages",
     "misc_apt_packages",
     "entertainment_apt_packages",

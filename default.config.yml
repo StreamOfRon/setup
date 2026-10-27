@@ -14,6 +14,7 @@ agent_python: true
 agent_python_venv: "{{ lookup('env', 'HOME') }}/.local/share/default-venv"
 agent_python_packages:
   - pyyaml
+  - jinja2
 
 vscode: false
 
@@ -128,5 +129,3 @@ install_other_apps: ignore
 install_other_formulae: []
 install_other_casks: []
 install_other_apt_packages: []
-remove_other_formulae: []
-remove_other_casks: []

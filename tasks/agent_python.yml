@@ -15,7 +15,7 @@
     'Updated' in agent_python_pip.stderr
   when: agent_python_packages | length > 0
 
-- name: Verify plain import works in default venv
+- name: Verify plain imports work in default venv
   ansible.builtin.command:
-    cmd: "{{ agent_python_venv }}/bin/python -c \"import yaml; print(yaml.__version__)\""
+    cmd: "{{ agent_python_venv }}/bin/python -c \"import yaml, jinja2; print(yaml.__version__, jinja2.__version__)\""
   changed_when: false
