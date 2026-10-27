@@ -317,32 +317,6 @@
           ansible.builtin.debug:
             msg: "Failed to manage aws tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
-    - name: Manage ghostty packages
-      block:
-        - name: Manage ghostty Homebrew packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-          vars:
-            enabled: "{{ install_ghostty | default(false) }}"
-            groupname: ghostty
-            formulae: []
-            casks: ["ghostty"]
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage ghostty apt packages
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_ghostty | default(false) }}"
-            groupname: ghostty
-            packages: ["ghostty"]
-          when:
-            - ansible_facts.pkg_mgr == "apt"
-            - ghostty_install_method | default('apt') == 'apt'
-      rescue:
-        - name: Warn about ghostty package install failure
-          ansible.builtin.debug:
-            msg: "Failed to manage ghostty packages, continuing: {{ ansible_failed_result | default('unknown error') }}"
-
     - name: Manage other packages
       block:
         - name: Manage other homebrew packages
@@ -368,9 +342,14 @@
           ansible.builtin.debug:
             msg: "Failed to manage other packages, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
-    - name: Manage ghostty config
-      ansible.builtin.import_tasks: tasks/ghostty.yml
-      when: install_ghostty | default(false)
+    - name: Manage ghostty
+      block:
+        - name: Manage ghostty tasks
+          ansible.builtin.import_tasks: tasks/ghostty.yml
+      rescue:
+        - name: Warn about ghostty management failure
+          ansible.builtin.debug:
+            msg: "Failed to manage ghostty, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
     - name: Ensure git is installed (final)
       ansible.builtin.import_tasks: tasks/git.yml

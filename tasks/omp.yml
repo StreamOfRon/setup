@@ -2,6 +2,7 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.omp/agent"
     state: directory
+    mode: "0755"
 
 - name: Manage omp config.yml
   ansible.builtin.template:

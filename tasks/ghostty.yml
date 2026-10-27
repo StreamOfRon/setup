@@ -4,24 +4,23 @@
 #   true   - install and manage everything below
 #   false  - remove what this group installed
 #   ignore - skip the group entirely, leave everything as-is
-
-- name: Check for ghostty binary
-  ansible.builtin.command: which ghostty
-  register: ghostty_binary
-  changed_when: false
-  failed_when: false
-  environment:
-    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'HOME') }}/Applications:{{ ansible_facts.env.PATH | default(lookup('env', 'PATH')) }}"
+#
+# Install and removal are gated by the group itself. Configuration is gated
+# only by the group being ON: on a first apply the binary may not exist yet at
+# the time this file starts, and a missing binary is no reason to skip writing
+# a config file that the install puts in place moments later.
 
 # --- true: install and manage ---
 
 - name: Install ghostty via Homebrew (macOS)
-  community.general.homebrew:
+  community.general.homebrew_cask:
     name: ghostty
     state: present
+    sudo_password: "{{ ansible_become_password | default(omit) }}"
   when:
     - ansible_facts.pkg_mgr == "homebrew"
     - install_ghostty | default(false) == true
+    - "'ghostty' not in (installed_brew_casks.stdout_lines | default([]))"
 
 - name: Install ghostty via apt (Ubuntu/Debian)
   ansible.builtin.apt:
@@ -30,9 +29,10 @@
   become: true
   when:
     - ansible_facts.pkg_mgr == "apt"
-    - ansible_become_password is defined
     - install_ghostty | default(false) == true
     - ghostty_install_method | default('apt') == 'apt'
+    - ansible_become_password is defined
+    - "'ghostty' not in (installed_apt_packages.stdout_lines | default([]))"
 
 - name: Install ghostty via AppImage (Ubuntu/Debian)
   when:
@@ -69,16 +69,22 @@
     path: "{{ lookup('env', 'HOME') }}/.config/ghostty"
     state: directory
     mode: "0755"
-  when: ghostty_binary.rc == 0
+  when: install_ghostty | default(false) == true
 
 - name: Install Ghostty configuration
   ansible.builtin.copy:
     src: files/ghostty.conf
     dest: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
     mode: "0644"
-  when: ghostty_binary.rc == 0
+  when: install_ghostty | default(false) == true
 
 # --- false: remove what this group installed ---
+
+- name: Remove managed Ghostty config
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
+    state: absent
+  when: install_ghostty | default(false) == false
 
 - name: Remove symlink to ghostty AppImage
   ansible.builtin.file:
@@ -96,8 +102,24 @@
     - install_ghostty | default(false) == false
     - ansible_facts.pkg_mgr == "apt"
 
-- name: Remove managed Ghostty config
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
+- name: Remove ghostty via Homebrew (macOS)
+  community.general.homebrew_cask:
+    name: ghostty
     state: absent
-  when: install_ghostty | default(false) == false
+    sudo_password: "{{ ansible_become_password | default(omit) }}"
+  when:
+    - ansible_facts.pkg_mgr == "homebrew"
+    - install_ghostty | default(false) == false
+    - "'ghostty' in (installed_brew_casks.stdout_lines | default([]))"
+
+- name: Remove ghostty via apt (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name: ghostty
+    state: absent
+  become: true
+  when:
+    - ansible_facts.pkg_mgr == "apt"
+    - install_ghostty | default(false) == false
+    - ghostty_install_method | default('apt') == 'apt'
+    - ansible_become_password is defined
+    - "'ghostty' in (installed_apt_packages.stdout_lines | default([]))"

@@ -61,7 +61,7 @@
         state: present
       when: items | difference(installed_brew_formulae.stdout_lines) | length > 0
 
-- name: Install autoenv from git
+- name: Install autoenv from git  # noqa: latest[git]
   when: ansible_facts.pkg_mgr != "homebrew"
   ansible.builtin.git:
     repo: https://github.com/hyperupcall/autoenv.git
@@ -73,7 +73,7 @@
 - name: Install powerlevel10k theme from git
   when: ansible_facts.pkg_mgr != "homebrew"
   block:
-    - name: Pull powerlevel10k theme
+    - name: Pull powerlevel10k theme  # noqa: latest[git]
       ansible.builtin.git:
         repo: https://github.com/romkatv/powerlevel10k.git
         dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
