@@ -34,7 +34,7 @@ BASE_PLAY = """\
       ansible.builtin.set_fact:
         ansible_facts:
           pkg_mgr: "{{ fake_pkg_mgr }}"
-          system: Linux
+          system: "{{ fake_system }}"
           machine: x86_64
           env:
             PATH: "{{ test_path }}"
@@ -70,6 +70,7 @@ class TaskFileTests(unittest.TestCase):
     def run_tasks(self, task_file, extra_vars=None):
         variables = {
             "fake_pkg_mgr": "none",
+            "fake_system": "Linux",
             "test_path": self.test_path,
             "ansible_python_interpreter": sys.executable,
         }
@@ -109,12 +110,25 @@ class TaskFileTests(unittest.TestCase):
             {"install_ghostty": True, "ghostty_install_method": "apt"},
         )
 
-        config = self.home / ".config/ghostty/ghostty.conf"
+        config = self.home / ".config/ghostty/config"
         self.assertTrue(config.exists(), "ghostty config was not written on first run")
         self.assertIn("theme=dark", config.read_text())
 
+    def test_ghostty_config_uses_the_macos_application_support_path(self):
+        self.run_tasks(
+            "tasks/ghostty.yml",
+            {"install_ghostty": True, "fake_system": "Darwin"},
+        )
+
+        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config"
+        self.assertTrue(config.exists(), "ghostty config was not written for macOS")
+        self.assertFalse(
+            (self.home / ".config/ghostty").exists(),
+            "ghostty config must not be written to the XDG path on macOS",
+        )
+
     def test_ghostty_removal_runs_when_the_group_is_off(self):
-        config = self.home / ".config/ghostty/ghostty.conf"
+        config = self.home / ".config/ghostty/config"
         config.parent.mkdir(parents=True)
         config.write_text("# stale\n")
 
@@ -122,8 +136,29 @@ class TaskFileTests(unittest.TestCase):
 
         self.assertFalse(config.exists(), "ghostty config was not removed when OFF")
 
+    def test_ghostty_removal_uses_the_macos_application_support_path(self):
+        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config"
+        config.parent.mkdir(parents=True)
+        config.write_text("# stale\n")
+
+        self.run_tasks(
+            "tasks/ghostty.yml",
+            {"install_ghostty": False, "fake_system": "Darwin"},
+        )
+
+        self.assertFalse(config.exists(), "macOS ghostty config was not removed when OFF")
+
+    def test_ghostty_removal_cleans_up_the_legacy_config_path(self):
+        legacy = self.home / ".config/ghostty/ghostty.conf"
+        legacy.parent.mkdir(parents=True)
+        legacy.write_text("# stale\n")
+
+        self.run_tasks("tasks/ghostty.yml", {"install_ghostty": False})
+
+        self.assertFalse(legacy.exists(), "legacy ghostty config was not removed when OFF")
+
     def test_ghostty_ignore_leaves_existing_config_alone(self):
-        config = self.home / ".config/ghostty/ghostty.conf"
+        config = self.home / ".config/ghostty/config"
         config.parent.mkdir(parents=True)
         config.write_text("# hand written\n")
 

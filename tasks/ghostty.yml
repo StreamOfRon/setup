@@ -9,8 +9,21 @@
 # only by the group being ON: on a first apply the binary may not exist yet at
 # the time this file starts, and a missing binary is no reason to skip writing
 # a config file that the install puts in place moments later.
+#
+# The destination follows Ghostty's documented locations: on macOS
+# ~/Library/Application Support/com.mitchellh.ghostty/config (which takes
+# precedence over the XDG path), and elsewhere the XDG config directory.
+# Ghostty reads a file named "config", so the file must not carry another name.
 
 # --- true: install and manage ---
+
+- name: Determine the Ghostty configuration path for this platform
+  ansible.builtin.set_fact:
+    ghostty_config_path: >-
+      {{ lookup('env', 'HOME')
+         ~ ('/Library/Application Support/com.mitchellh.ghostty/config'
+            if ansible_facts.system == 'Darwin'
+            else '/.config/ghostty/config') }}
 
 - name: Install ghostty via Homebrew (macOS)
   community.general.homebrew_cask:
@@ -66,7 +79,7 @@
 
 - name: Ensure Ghostty config directory exists
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.config/ghostty"
+    path: "{{ ghostty_config_path | dirname }}"
     state: directory
     mode: "0755"
   when: install_ghostty | default(false) == true
@@ -74,13 +87,19 @@
 - name: Install Ghostty configuration
   ansible.builtin.copy:
     src: files/ghostty.conf
-    dest: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
+    dest: "{{ ghostty_config_path }}"
     mode: "0644"
   when: install_ghostty | default(false) == true
 
 # --- false: remove what this group installed ---
 
 - name: Remove managed Ghostty config
+  ansible.builtin.file:
+    path: "{{ ghostty_config_path }}"
+    state: absent
+  when: install_ghostty | default(false) == false
+
+- name: Remove legacy Ghostty config
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
     state: absent
