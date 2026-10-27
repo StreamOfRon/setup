@@ -1,6 +1,8 @@
 ---
-# Collections used by main.yml. CI installs these; bootstrap gets the same
-# collections from the distribution's `ansible` package.
+# Collections used by main.yml. Installed by run-ansible-pull.sh and by CI.
+# The distribution's `ansible` package ships whatever collection version it
+# happens to bundle (Ubuntu 24.04: ansible 13.1.0 -> community.general 12.1.0),
+# so the pin is enforced explicitly instead of assumed.
 collections:
   - name: community.general
     version: ">=13,<14"

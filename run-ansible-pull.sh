@@ -13,6 +13,21 @@ STAMP="${FULL_APPLY_STAMP:-${HOME}/.ansible.last-full-apply}"
 MAX_AGE_HOURS="${FULL_APPLY_MAX_AGE_HOURS:-24}"
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
+# Collections main.yml needs. ansible-pull clones the repo itself, so fetch the
+# requirement list from the published branch instead of assuming a checkout.
+# Failure here is not fatal: the playbook may still work with whatever the
+# distribution's ansible package bundled.
+REQUIREMENTS=$(mktemp)
+if ! which ansible-galaxy >/dev/null 2>&1; then
+  log "WARNING: ansible-galaxy not found; skipping collection install"
+elif curl -fsSL https://raw.githubusercontent.com/StreamOfRon/setup/main/requirements.yml -o "$REQUIREMENTS"; then
+  ansible-galaxy collection install -r "$REQUIREMENTS" \
+    || log "WARNING: collection install failed; continuing with installed collections"
+else
+  log "WARNING: could not fetch requirements.yml; continuing with installed collections"
+fi
+rm -f "$REQUIREMENTS"
+
 AP=$(which ansible-pull)
 NOW=$(date +%s)
 LAST=$(cat "$STAMP" 2>/dev/null || echo 0)

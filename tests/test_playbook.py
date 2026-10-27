@@ -9,6 +9,7 @@ written.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -121,6 +122,15 @@ class TaskFileTests(unittest.TestCase):
 
         self.assertFalse(config.exists(), "ghostty config was not removed when OFF")
 
+    def test_ghostty_ignore_leaves_existing_config_alone(self):
+        config = self.home / ".config/ghostty/ghostty.conf"
+        config.parent.mkdir(parents=True)
+        config.write_text("# hand written\n")
+
+        self.run_tasks("tasks/ghostty.yml", {"install_ghostty": "ignore"})
+
+        self.assertEqual(config.read_text(), "# hand written\n")
+
     def test_worktrunk_and_herdr_config_are_written_without_binaries(self):
         self.run_tasks("tasks/herdr.yml", {"install_ai_dev_tools": True})
 
@@ -129,6 +139,19 @@ class TaskFileTests(unittest.TestCase):
         self.assertTrue(worktrunk.exists(), "worktrunk config was not written")
         self.assertTrue(herdr.exists(), "herdr config was not written")
         self.assertIn("worktrunk.open", herdr.read_text())
+
+    def test_ignore_is_inert_for_package_files(self):
+        # If the tristate gate were wrong this would attempt apt with no
+        # become password and fail.
+        self.run_tasks(
+            "tasks/apt_packages.yml",
+            {
+                "fake_pkg_mgr": "apt",
+                "enabled": "ignore",
+                "groupname": "test",
+                "packages": ["zstd"],
+            },
+        )
 
 
 @unittest.skipUnless(yaml, "PyYAML not installed")
@@ -145,6 +168,86 @@ class MainWiringTests(unittest.TestCase):
         imports = [t for t in entry.get("block", []) if "ansible.builtin.import_tasks" in t]
         self.assertEqual(len(imports), 1)
         self.assertFalse(imports[0].get("when"))
+
+
+def _as_list(value):
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    return list(value)
+
+
+def _walk_tasks(tasks, inherited_whens=()):
+    """Yield (task, conditions) with block-level conditions inherited."""
+    for task in tasks or []:
+        if not isinstance(task, dict):
+            continue
+        whens = list(inherited_whens) + _as_list(task.get("when"))
+        yield task, whens
+        for key in ("block", "rescue", "always"):
+            yield from _walk_tasks(task.get(key), whens)
+
+
+BECOME_GATE = "ansible_become_password is defined"
+
+
+class GroupDefaultTests(unittest.TestCase):
+    """A fresh checkout must install and remove nothing."""
+
+    def test_tristate_package_groups_default_to_ignore(self):
+        menu = json.loads((ROOT / "setup-config-menu.json").read_text())
+        groups = [
+            item
+            for category in menu["categories"]
+            for item in category["items"]
+            if item["type"] == "tristate"
+        ]
+        self.assertTrue(groups, "no tristate groups found in the menu")
+
+        config = (ROOT / "default.config.yml").read_text()
+        for item in groups:
+            match = re.search(
+                rf"^{re.escape(item['key'])}:\s*(\S+)", config, re.MULTILINE
+            )
+            self.assertIsNotNone(
+                match, f"{item['key']} is missing from default.config.yml"
+            )
+            self.assertEqual(
+                match.group(1),
+                "ignore",
+                f"{item['key']} must default to ignore, not {match.group(1)}",
+            )
+
+
+@unittest.skipUnless(yaml, "PyYAML not installed")
+class BecomeGateTests(unittest.TestCase):
+    def test_every_become_task_is_gated_on_a_become_password(self):
+        offenders = []
+        sources = [ROOT / "main.yml", *sorted((ROOT / "tasks").glob("*.yml"))]
+        for path in sources:
+            for document in yaml.safe_load_all(path.read_text()):
+                if isinstance(document, list):
+                    tasks = document
+                elif isinstance(document, dict):
+                    tasks = _as_list(document.get("pre_tasks")) + _as_list(
+                        document.get("tasks")
+                    )
+                else:
+                    continue
+                for task, whens in _walk_tasks(tasks):
+                    if task.get("become") is not True:
+                        continue
+                    gated = any(
+                        BECOME_GATE in when for when in whens if isinstance(when, str)
+                    )
+                    if not gated:
+                        offenders.append(
+                            f"{path.name}: {task.get('name', '<unnamed>')}"
+                        )
+        self.assertEqual(
+            offenders, [], "become without a password gate: " + ", ".join(offenders)
+        )
 
 
 if __name__ == "__main__":

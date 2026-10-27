@@ -95,11 +95,12 @@
     else
       tar -xzf "$archive" -C "$tmpdir"
     fi
-    bin="$(find "$tmpdir" -type f -name gh | head -n 1)"
+    bin="$(find "$tmpdir" -type f -name gh -print -quit)"
     install -m 0755 "$bin" "{{ lookup('env', 'HOME') }}/.local/bin/gh"
     rm -rf "$tmpdir"
   args:
     executable: /bin/bash
+  changed_when: true
   when:
     - ansible_facts.os_family != 'Windows'
     - ansible_facts.system in ['Darwin', 'Linux']

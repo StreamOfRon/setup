@@ -220,6 +220,15 @@ class ApplyTests(unittest.TestCase):
             ],
         )
 
+    def test_become_prompt_is_only_needed_for_apt(self):
+        self.assertTrue(TOOL["become_prompt_required"](True))
+        self.assertFalse(TOOL["become_prompt_required"](False))
+
+    def test_become_choice_requires_an_explicit_yes(self):
+        self.assertTrue(TOOL["become_choice_confirmed"](True))
+        self.assertFalse(TOOL["become_choice_confirmed"](False))
+        self.assertFalse(TOOL["become_choice_confirmed"](None))
+
     def test_apply_playbook_forwards_become_flag(self):
         calls = []
 

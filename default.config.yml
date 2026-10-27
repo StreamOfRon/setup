@@ -1,7 +1,11 @@
 # Group toggles accept three values:
-#   true  - install all apps in the group
-#   false - remove all apps in the group
+#   true   - install all apps in the group
+#   false  - remove all apps in the group
 #   ignore - skip the group entirely
+#
+# Package groups default to `ignore`: a fresh checkout must not uninstall
+# software the user installed themselves. Opt in with setup-config, or set a
+# group to `false` explicitly to remove what the playbook manages.
 hostname_sanity_check: true
 setup_ansible_pull: true
 dotfiles: true
@@ -22,7 +26,7 @@ install_mas_apps:
   - 1352778147 # Bitwarden
 remove_mas_apps: []
 
-install_sync_tools: false
+install_sync_tools: ignore
 sync_formulae: []
 sync_casks:
   - nextcloud
@@ -31,7 +35,7 @@ sync_apt_packages:
   - nextcloud-desktop
   - syncthing
 
-install_misc_apps: false
+install_misc_apps: ignore
 misc_formulae: []
 misc_casks:
   - iterm2
@@ -39,7 +43,7 @@ misc_casks:
 misc_apt_packages:
   - unar
 
-install_entertainment_apps: false
+install_entertainment_apps: ignore
 entertainment_formulae: []
 entertainment_casks:
   - spotify
@@ -47,7 +51,7 @@ entertainment_casks:
 entertainment_apt_packages:
   - vlc
 
-install_media_tools: false
+install_media_tools: ignore
 media_formulae: []
 media_casks:
   - handbrake
@@ -55,7 +59,7 @@ media_casks:
 media_apt_packages:
   - handbrake
 
-install_kube_apps: false
+install_kube_apps: ignore
 kube_taps: []
 kube_formulae:
   - argocd
@@ -68,7 +72,7 @@ kube_apt_packages:
   - kubectl
   - kubectx
 
-install_dev_cli_tools: false
+install_dev_cli_tools: ignore
 dev_cli_formulae:
   - ansible-lint
   - gh
@@ -81,7 +85,7 @@ dev_cli_apt_packages:
   - pre-commit
   - yq
 
-install_dev_gui_tools: false
+install_dev_gui_tools: ignore
 dev_gui_formulae: []
 dev_gui_casks:
   - font-fira-code
@@ -90,7 +94,7 @@ dev_gui_casks:
 dev_gui_apt_packages:
   - fonts-firacode
 
-install_ai_dev_tools: false
+install_ai_dev_tools: ignore
 ai_dev_tools_formulae:
   - worktrunk
   - fzf
@@ -101,14 +105,14 @@ ai_dev_tools_apt_packages:
   - nodejs
   - npm
 
-install_common_cli_tools: false
+install_common_cli_tools: ignore
 common_cli_formulae:
   - zstd
 common_cli_casks: []
 common_cli_apt_packages:
   - zstd
 
-install_aws_tools: false
+install_aws_tools: ignore
 aws_formulae:
   - awscli
   - s3cmd
@@ -117,10 +121,10 @@ aws_apt_packages:
   - awscli
   - s3cmd
 
-install_ghostty: false
+install_ghostty: ignore
 ghostty_install_method: apt
 
-install_other_apps: true
+install_other_apps: ignore
 install_other_formulae: []
 install_other_casks: []
 install_other_apt_packages: []

@@ -13,9 +13,17 @@ the `setup-config` TUI.
 - `default.config.yml` — default configuration values.
 - `setup-config` — standalone Python TUI (PEP 723) for editing `~/.setup-options`.
 - `bootstrap.sh` — one-time bootstrap (installs ansible + git, then runs ansible-pull).
-- `run-ansible-pull.sh` — full/quiet apply logic based on a stamp file.
+- `run-ansible-pull.sh` — full/quiet apply logic based on a stamp file, and the
+  place that installs `requirements.yml` collections.
+- `requirements.yml` — Ansible collections used by `main.yml`.
 
 ## Conventions
+
+### Group defaults
+- Tristate package groups default to `ignore` in `default.config.yml`. A fresh
+  apply installs and removes nothing; opting in is explicit. `false` is
+  destructive and must be set deliberately.
+- `tests/test_playbook.py::GroupDefaultTests` enforces this; do not weaken it.
 
 ### sudo / non-interactive runs
 - Do **not** configure passwordless sudo. Bootstrap installs packages with an
@@ -23,6 +31,7 @@ the `setup-config` TUI.
 - Any task using `become: true` must be gated on `ansible_become_password is
   defined`. Running sudo-requiring tasks in a non-interactive context is a
   misconfiguration and should be skipped, not attempted.
+- `tests/test_playbook.py::BecomeGateTests` enforces this.
 - Apt cache updates (`ansible.builtin.apt: update_cache`) follow the same gate.
 
 ### Apt package presence checks

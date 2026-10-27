@@ -76,6 +76,7 @@
   become: true
   when:
     - ansible_facts.system == "Darwin"
+    - ansible_become_password is defined
     - hostname_needs_fix | default(false)
   block:
     - name: Set UNIX HostName from ComputerName and search domain

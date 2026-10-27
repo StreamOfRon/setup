@@ -322,7 +322,7 @@
         - name: Manage other homebrew packages
           ansible.builtin.import_tasks: tasks/homebrew_packages.yml
           vars:
-            enabled: "{{ install_other_apps | default(true) }}"
+            enabled: "{{ install_other_apps | default('ignore') }}"
             groupname: other
             formulae: "{{ install_other_formulae }}"
             casks: "{{ install_other_casks }}"
@@ -332,7 +332,7 @@
         - name: Manage other packages (apt)
           ansible.builtin.import_tasks: tasks/apt_packages.yml
           vars:
-            enabled: "{{ install_other_apps | default(true) }}"
+            enabled: "{{ install_other_apps | default('ignore') }}"
             groupname: other
             packages: "{{ install_other_apt_packages }}"
           when:

@@ -38,6 +38,7 @@
   vars:
     package_state: absent
   become: true
+  when: ansible_become_password is defined
   block:
     - name: Uninstall app store apps
       community.general.mas:

@@ -690,6 +690,16 @@ def find_ansible_playbook(which=shutil.which, is_executable=os.access) -> Option
     return None
 
 
+def become_prompt_required(apt_available: bool) -> bool:
+    """Only apt tasks need root; Homebrew formulae and casks do not."""
+    return bool(apt_available)
+
+
+def become_choice_confirmed(answer: object) -> bool:
+    """Treat prompt_toolkit's answer as opt-in: True only, so Ctrl-C (None) is No."""
+    return answer is True
+
+
 def apply_playbook(repo_root: Path, *, runner=None, which=shutil.which,
                    is_executable=os.access, out=None,
                    ask_become_pass: bool = False) -> int:
@@ -1312,14 +1322,17 @@ def run_tui(config, menu):
                     notify("Apply cancelled.")
                     continue
                 use_become = False
-                if apt or brew:
-                    use_become = yes_no_dialog(
-                        title="Allow system changes?",
-                        text=(
-                            "Some package and cask tasks need sudo. You will be "
-                            "prompted for your password. Choose No to skip them."
-                        ),
-                    ).run()
+                if become_prompt_required(apt):
+                    use_become = become_choice_confirmed(
+                        yes_no_dialog(
+                            title="Allow system changes?",
+                            text=(
+                                "The Debian/Ubuntu package tasks need sudo. You "
+                                "will be prompted for your password. Choose No "
+                                "to skip them."
+                            ),
+                        ).run()
+                    )
                 code = apply_playbook(REPO_ROOT, ask_become_pass=use_become)
                 if code != 0:
                     notify(f"Playbook exited with status {code}.", 8.0)

@@ -12,9 +12,10 @@ Each group accepts three values:
 - `false` removes the group's packages and managed configuration.
 - `ignore` leaves the machine alone.
 
-`false` is destructive, and several groups default to `false`. If you installed
-something yourself and want the playbook to leave it alone, set the group to
-`ignore`.
+Package groups default to `ignore`. A fresh checkout installs nothing and
+removes nothing; opting in is an explicit act. Use `setup-config` (below) or
+set a group to `true` in `~/.setup-options`. `false` is destructive, so only
+choose it when you want the playbook to uninstall that group.
 
 ## Configuration tool
 
