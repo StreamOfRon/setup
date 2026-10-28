@@ -13,11 +13,8 @@
     "opencode-plugin-artifacts@git+https://github.com/StreamOfRon/opencode-plugin-artifacts.git"
   ],
   "default_agent": "build",
-  "agents": {
-    "title": {
-      "model": "openrouter/openrouter/free"
-    }
-  },
+  "small_model": "opencode/big-pickle",
+  "warming": false,
   "commands": {
     "review": {
       "template": "Review the changes made in this working path.  Review each file changed, and both look up and follow method calls to review each change in its greater context.  Do not output a summary of the changes - only output issues and concerns.  When reviewing code, do not flag speculative issues without first trying to disprove the speculation.  Flag any unclear issues at the end of the review in a separate section",
