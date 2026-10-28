@@ -129,16 +129,6 @@
           "extras": [
             "ghostty_install_method"
           ]
-        },
-        {
-          "key": "install_other_apps",
-          "label": "Other packages",
-          "type": "tristate",
-          "lists": [
-            "install_other_formulae",
-            "install_other_casks",
-            "install_other_apt_packages"
-          ]
         }
       ]
     },
@@ -246,8 +236,6 @@
     "common_cli_casks",
     "aws_formulae",
     "aws_casks",
-    "install_other_formulae",
-    "install_other_casks",
     "sync_apt_packages",
     "misc_apt_packages",
     "entertainment_apt_packages",
@@ -257,7 +245,6 @@
     "dev_gui_apt_packages",
     "ai_dev_tools_apt_packages",
     "common_cli_apt_packages",
-    "aws_apt_packages",
-    "install_other_apt_packages"
+    "aws_apt_packages"
   ]
 }

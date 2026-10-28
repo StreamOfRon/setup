@@ -317,31 +317,6 @@
           ansible.builtin.debug:
             msg: "Failed to manage aws tools, continuing: {{ ansible_failed_result | default('unknown error') }}"
 
-    - name: Manage other packages
-      block:
-        - name: Manage other homebrew packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
-          vars:
-            enabled: "{{ install_other_apps | default('ignore') }}"
-            groupname: other
-            formulae: "{{ install_other_formulae }}"
-            casks: "{{ install_other_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage other packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_other_apps | default('ignore') }}"
-            groupname: other
-            packages: "{{ install_other_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
-      rescue:
-        - name: Warn about other packages install failure
-          ansible.builtin.debug:
-            msg: "Failed to manage other packages, continuing: {{ ansible_failed_result | default('unknown error') }}"
-
     - name: Manage ghostty
       block:
         - name: Manage ghostty tasks

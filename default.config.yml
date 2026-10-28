@@ -124,8 +124,3 @@ aws_apt_packages:
 
 install_ghostty: ignore
 ghostty_install_method: apt
-
-install_other_apps: ignore
-install_other_formulae: []
-install_other_casks: []
-install_other_apt_packages: []
