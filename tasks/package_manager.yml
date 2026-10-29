@@ -4,9 +4,18 @@
 - name: Locate Homebrew
   ansible.builtin.command:
     cmd: which brew
+  check_mode: false
   environment:
     PATH: >-
-      {{ lookup('env', 'HOME') }}/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH | default('/usr/bin:/bin') }}
+      {{
+        [
+          lookup('env', 'HOME') ~ '/.linuxbrew/bin',
+          '/home/linuxbrew/.linuxbrew/bin',
+          '/opt/homebrew/bin',
+          '/usr/local/bin',
+          ansible_facts.env.PATH | default('/usr/bin:/bin'),
+        ] | join(':')
+      }}
   register: brew_lookup
   changed_when: false
   failed_when: false

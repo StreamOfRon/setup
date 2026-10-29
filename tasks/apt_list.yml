@@ -6,3 +6,4 @@
   register: installed_apt_packages
   changed_when: false
   failed_when: false
+  check_mode: false
