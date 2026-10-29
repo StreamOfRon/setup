@@ -8,7 +8,21 @@
   ansible.builtin.cron:
     name: PATH
     env: true
-    job: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
+    job: >-
+      {{
+        [
+          '/opt/homebrew/bin',
+          '/opt/homebrew/sbin',
+          '/home/linuxbrew/.linuxbrew/bin',
+          '/home/linuxbrew/.linuxbrew/sbin',
+          '/usr/local/bin',
+          '/usr/local/sbin',
+          '/usr/bin',
+          '/usr/sbin',
+          '/bin',
+          '/sbin',
+        ] | join(':')
+      }}
 
 # The script itself decides full re-apply vs quiet sync from the age of
 # ~/.ansible.last-full-apply, so no flags are needed at the cron level.

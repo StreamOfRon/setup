@@ -1,6 +1,7 @@
 - name: Homebrew taps for {{ groupname }}
   community.general.homebrew_tap:
     name: "{{ taps }}"
+    path: "{{ brew_bin_dir }}"
     state: '{{ enabled | ternary("present", "absent") }}'
   when:
     - taps is defined
@@ -12,6 +13,7 @@
 - name: Homebrew formulae for {{ groupname }}
   community.general.homebrew:
     name: "{{ formulae }}"
+    path: "{{ brew_bin_dir }}"
     state: '{{ enabled | ternary("latest", "absent") }}'
   when:
     - formulae | length > 0
@@ -22,9 +24,11 @@
 - name: Homebrew casks for {{ groupname }}
   community.general.homebrew_cask:
     name: "{{ casks }}"
+    path: "{{ brew_bin_dir }}"
     state: '{{ enabled | ternary("present", "absent") }}'
     sudo_password: "{{ ansible_become_password | default() }}"
   when:
+    - ansible_facts.system == "Darwin"
     - casks | length > 0
     - casks | difference(installed_brew_casks.stdout_lines) | length > 0 or
       (casks | intersect(installed_brew_casks.stdout_lines) | length > 0 and not enabled)

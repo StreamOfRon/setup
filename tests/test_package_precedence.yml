@@ -1,0 +1,121 @@
+- name: Package precedence resolution
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../default.config.yml
+  vars:
+    available_brew_formulae:
+      stdout_lines:
+        - handbrake
+        - kubectx
+        - kubernetes-cli
+        - node
+        - syncthing
+        - zstd
+    installed_brew_formulae:
+      stdout_lines: []
+  tasks:
+    - name: Same-name apt package with a brew formula
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: media
+        formulae: "{{ media_formulae }}"
+        apt_packages: "{{ media_apt_packages }}"
+    - name: Media resolves to brew
+      ansible.builtin.assert:
+        that:
+          - _group_formulae == ['handbrake']
+          - _group_apt_packages == []
+
+    - name: Sync group with a brew formula and an apt-only package
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: sync
+        formulae: "{{ sync_formulae }}"
+        apt_packages: "{{ sync_apt_packages }}"
+    - name: Sync resolves to brew plus one apt gap
+      ansible.builtin.assert:
+        that:
+          - _group_formulae | sort == ['syncthing']
+          - _group_apt_packages == ['nextcloud-desktop']
+
+    - name: Renamed kube equivalent
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: kube
+        formulae: "{{ kube_formulae }}"
+        apt_packages: "{{ kube_apt_packages }}"
+    - name: Kube resolves without duplicate kubectl
+      ansible.builtin.assert:
+        that:
+          - _group_formulae | sort == ['argocd', 'kubectx', 'kubernetes-cli']
+          - _group_apt_packages == []
+
+    - name: Renamed node equivalents
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: ai-dev-tools
+        formulae: "{{ ai_dev_tools_formulae }}"
+        apt_packages: "{{ ai_dev_tools_apt_packages }}"
+    - name: AI tools resolve without nodejs or npm
+      ansible.builtin.assert:
+        that:
+          - _group_apt_packages == []
+
+    - name: No brew formula exists
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: dev-gui
+        formulae: "{{ dev_gui_formulae }}"
+        apt_packages: "{{ dev_gui_apt_packages }}"
+    - name: Dev GUI falls back to apt
+      ansible.builtin.assert:
+        that:
+          - _group_formulae == []
+          - _group_apt_packages == ['fonts-firacode']
+
+    - name: Removal keeps the full apt list
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: false
+        groupname: sync
+        formulae: "{{ sync_formulae }}"
+        apt_packages: "{{ sync_apt_packages }}"
+    - name: Removal list is unfiltered
+      ansible.builtin.assert:
+        that:
+          - _group_apt_packages | sort == ['nextcloud-desktop', 'syncthing']
+
+    - name: Brew unavailable
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: sync
+        formulae: "{{ sync_formulae }}"
+        apt_packages: "{{ sync_apt_packages }}"
+        available_brew_formulae: {stdout_lines: []}
+        installed_brew_formulae: {stdout_lines: []}
+    - name: Apt runs everything when brew is unavailable
+      ansible.builtin.assert:
+        that:
+          - _group_formulae == []
+          - _group_apt_packages | sort == ['nextcloud-desktop', 'syncthing']
+
+    - name: Formula already installed by brew
+      ansible.builtin.import_tasks: ../tasks/package_resolve.yml
+      vars:
+        enabled: true
+        groupname: installed-check
+        formulae: []
+        apt_packages: [fzf, zstd]
+        available_brew_formulae: {stdout_lines: []}
+        installed_brew_formulae: {stdout_lines: [fzf]}
+    - name: Installed brew formula shadows apt
+      ansible.builtin.assert:
+        that:
+          - _group_apt_packages == ['zstd']

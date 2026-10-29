@@ -16,6 +16,17 @@ agent_python_packages:
   - pyyaml
   - jinja2
 
+# Prefer Homebrew formulae over apt when both are available (Linuxbrew).
+# Ignored on macOS, where Homebrew is the only supported package manager.
+prefer_homebrew: true
+
+# Apt package names that a Homebrew formula also provides under a different
+# name. Used to avoid installing both when Homebrew is preferred.
+brew_apt_equivalents:
+  nodejs: node
+  npm: node
+  kubectl: kubernetes-cli
+
 vscode: false
 
 install_apple_office: false

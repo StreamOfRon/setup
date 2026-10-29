@@ -18,6 +18,9 @@
         file: "{{ lookup('env', 'HOME') }}/.setup-options"
       when: local_options_file.stat.exists
 
+    - name: Resolve package manager preference
+      ansible.builtin.import_tasks: tasks/package_manager.yml
+
     - name: Ensure uv is installed
       ansible.builtin.import_tasks: tasks/uv.yml
 
@@ -25,7 +28,7 @@
       block:
         - name: Get installed homebrew packages
           ansible.builtin.import_tasks: tasks/homebrew_list.yml
-          when: ansible_facts.pkg_mgr == "homebrew"
+          when: brew_available | bool
 
         - name: Get installed apt packages
           ansible.builtin.import_tasks: tasks/apt_list.yml
@@ -39,7 +42,8 @@
         - name: Update homebrew packages
           community.general.homebrew:
             update_homebrew: true
-          when: ansible_facts.pkg_mgr == "homebrew"
+            path: "{{ brew_bin_dir }}"
+          when: brew_available | bool
 
         - name: Update apt cache
           ansible.builtin.apt:
@@ -78,23 +82,13 @@
     - name: Manage sync tools
       block:
         - name: Manage sync tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_sync_tools | default(false) }}"
             groupname: sync
             formulae: "{{ sync_formulae }}"
             casks: "{{ sync_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage sync tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_sync_tools | default(false) }}"
-            groupname: sync
-            packages: "{{ sync_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ sync_apt_packages }}"
       rescue:
         - name: Warn about sync tools install failure
           ansible.builtin.debug:
@@ -103,23 +97,13 @@
     - name: Manage misc apps
       block:
         - name: Manage misc apps packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_misc_apps | default(false) }}"
             groupname: misc
             formulae: "{{ misc_formulae }}"
             casks: "{{ misc_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage misc apps packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_misc_apps | default(false) }}"
-            groupname: misc
-            packages: "{{ misc_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ misc_apt_packages }}"
       rescue:
         - name: Warn about misc apps install failure
           ansible.builtin.debug:
@@ -128,23 +112,13 @@
     - name: Manage entertainment apps
       block:
         - name: Manage entertainment apps packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_entertainment_apps | default(false) }}"
             groupname: entertainment
             formulae: "{{ entertainment_formulae }}"
             casks: "{{ entertainment_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage entertainment apps packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_entertainment_apps | default(false) }}"
-            groupname: entertainment
-            packages: "{{ entertainment_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ entertainment_apt_packages }}"
       rescue:
         - name: Warn about entertainment apps install failure
           ansible.builtin.debug:
@@ -153,23 +127,13 @@
     - name: Manage media tools
       block:
         - name: Manage media tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_media_tools | default(false) }}"
             groupname: media
             formulae: "{{ media_formulae }}"
             casks: "{{ media_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage media tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_media_tools | default(false) }}"
-            groupname: media
-            packages: "{{ media_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ media_apt_packages }}"
       rescue:
         - name: Warn about media tools install failure
           ansible.builtin.debug:
@@ -178,24 +142,14 @@
     - name: Manage kube tools
       block:
         - name: Manage kube tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_kube_apps | default(false) }}"
             groupname: kube
             taps: "{{ kube_taps }}"
             formulae: "{{ kube_formulae }}"
             casks: "{{ kube_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage kube tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_kube_apps | default(false) }}"
-            groupname: kube
-            packages: "{{ kube_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ kube_apt_packages }}"
       rescue:
         - name: Warn about kube tools install failure
           ansible.builtin.debug:
@@ -204,23 +158,13 @@
     - name: Manage dev cli tools
       block:
         - name: Manage dev cli tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_dev_cli_tools | default(false) }}"
             groupname: dev-cli
             formulae: "{{ dev_cli_formulae }}"
             casks: "{{ dev_cli_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage dev cli tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_dev_cli_tools | default(false) }}"
-            groupname: dev-cli
-            packages: "{{ dev_cli_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ dev_cli_apt_packages }}"
 
         - name: Manage rustup toolchain
           ansible.builtin.import_tasks: tasks/rustup.yml
@@ -232,23 +176,13 @@
     - name: Manage dev gui tools
       block:
         - name: Manage dev gui tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_dev_gui_tools | default(false) }}"
             groupname: dev-gui
-            formulae: []
+            formulae: "{{ dev_gui_formulae }}"
             casks: "{{ dev_gui_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage dev gui tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_dev_gui_tools | default(false) }}"
-            groupname: dev-gui
-            packages: "{{ dev_gui_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ dev_gui_apt_packages }}"
       rescue:
         - name: Warn about dev gui tools install failure
           ansible.builtin.debug:
@@ -270,23 +204,13 @@
     - name: Manage common cli tools
       block:
         - name: Manage common cli tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_common_cli_tools | default(false) }}"
             groupname: common cli
             formulae: "{{ common_cli_formulae }}"
             casks: "{{ common_cli_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage common cli tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_common_cli_tools | default(false) }}"
-            groupname: common cli
-            packages: "{{ common_cli_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ common_cli_apt_packages }}"
       rescue:
         - name: Warn about common cli tools install failure
           ansible.builtin.debug:
@@ -295,23 +219,13 @@
     - name: Manage aws tools
       block:
         - name: Manage aws tools packages
-          ansible.builtin.import_tasks: tasks/homebrew_packages.yml
+          ansible.builtin.import_tasks: tasks/package_group.yml
           vars:
             enabled: "{{ install_aws_tools | default(false) }}"
             groupname: aws
             formulae: "{{ aws_formulae }}"
             casks: "{{ aws_casks }}"
-          when:
-            - ansible_facts.pkg_mgr == "homebrew"
-
-        - name: Manage aws tools packages (apt)
-          ansible.builtin.import_tasks: tasks/apt_packages.yml
-          vars:
-            enabled: "{{ install_aws_tools | default(false) }}"
-            groupname: aws
-            packages: "{{ aws_apt_packages }}"
-          when:
-            - ansible_facts.pkg_mgr == "apt"
+            apt_packages: "{{ aws_apt_packages }}"
       rescue:
         - name: Warn about aws tools install failure
           ansible.builtin.debug:
