@@ -97,7 +97,7 @@
   when: install_ghostty | default(false) == true
 
 - name: Install Ghostty configuration
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: files/ghostty.conf
     dest: "{{ ghostty_config_path }}"
     mode: "0644"

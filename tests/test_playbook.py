@@ -200,6 +200,9 @@ class GhosttyConfigFileTests(unittest.TestCase):
         "term",
         "window-padding-x",
         "window-padding-y",
+        "background-opacity",
+        "background-blur",
+        "link-url",
     }
 
     def options(self):
@@ -207,6 +210,8 @@ class GhosttyConfigFileTests(unittest.TestCase):
         for line in (ROOT / "files/ghostty.conf").read_text().splitlines():
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
+                continue
+            if stripped.startswith("{%") or stripped.startswith("{#") or stripped.startswith("{{"):
                 continue
             key, _, value = stripped.partition("=")
             options[key.strip()] = value.strip()
