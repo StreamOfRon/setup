@@ -11,15 +11,20 @@
 # a config file that the install puts in place moments later.
 #
 # The destination follows Ghostty's documented locations: on macOS
-# ~/Library/Application Support/com.mitchellh.ghostty/config (which takes
+# ~/Library/Application Support/com.mitchellh.ghostty/config.ghostty (which takes
 # precedence over the XDG path), and elsewhere the XDG config directory.
-# Ghostty reads a file named "config", so the file must not carry another name.
+# Ghostty reads a file named "config.ghostty".
 
 # --- true: install and manage ---
 
 - name: Determine the Ghostty configuration path for this platform
   ansible.builtin.set_fact:
     ghostty_config_path: >-
+      {{ lookup('env', 'HOME')
+         ~ ('/Library/Application Support/com.mitchellh.ghostty/config.ghostty'
+            if ansible_facts.system == 'Darwin'
+            else '/.config/ghostty/config.ghostty') }}
+    ghostty_legacy_config_path: >-
       {{ lookup('env', 'HOME')
          ~ ('/Library/Application Support/com.mitchellh.ghostty/config'
             if ansible_facts.system == 'Darwin'
@@ -84,11 +89,24 @@
     mode: "0755"
   when: install_ghostty | default(false) == true
 
+- name: Rename legacy Ghostty config to the new filename
+  ansible.builtin.command:
+    cmd: "mv {{ ghostty_legacy_config_path }} {{ ghostty_config_path }}"
+    removes: "{{ ghostty_legacy_config_path }}"
+    creates: "{{ ghostty_config_path }}"
+  when: install_ghostty | default(false) == true
+
 - name: Install Ghostty configuration
   ansible.builtin.copy:
     src: files/ghostty.conf
     dest: "{{ ghostty_config_path }}"
     mode: "0644"
+  when: install_ghostty | default(false) == true
+
+- name: Remove legacy Ghostty config name after migration
+  ansible.builtin.file:
+    path: "{{ ghostty_legacy_config_path }}"
+    state: absent
   when: install_ghostty | default(false) == true
 
 # --- false: remove what this group installed ---
@@ -99,7 +117,13 @@
     state: absent
   when: install_ghostty | default(false) == false
 
-- name: Remove legacy Ghostty config
+- name: Remove legacy Ghostty config (old filename)
+  ansible.builtin.file:
+    path: "{{ ghostty_legacy_config_path }}"
+    state: absent
+  when: install_ghostty | default(false) == false
+
+- name: Remove legacy Ghostty config (ghostty.conf)
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config/ghostty/ghostty.conf"
     state: absent

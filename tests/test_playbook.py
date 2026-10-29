@@ -110,7 +110,7 @@ class TaskFileTests(unittest.TestCase):
             {"install_ghostty": True, "ghostty_install_method": "apt"},
         )
 
-        config = self.home / ".config/ghostty/config"
+        config = self.home / ".config/ghostty/config.ghostty"
         self.assertTrue(config.exists(), "ghostty config was not written on first run")
         self.assertIn("font-family=FiraCode Nerd Font", config.read_text())
 
@@ -120,7 +120,7 @@ class TaskFileTests(unittest.TestCase):
             {"install_ghostty": True, "fake_system": "Darwin"},
         )
 
-        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config"
+        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config.ghostty"
         self.assertTrue(config.exists(), "ghostty config was not written for macOS")
         self.assertFalse(
             (self.home / ".config/ghostty").exists(),
@@ -128,7 +128,7 @@ class TaskFileTests(unittest.TestCase):
         )
 
     def test_ghostty_removal_runs_when_the_group_is_off(self):
-        config = self.home / ".config/ghostty/config"
+        config = self.home / ".config/ghostty/config.ghostty"
         config.parent.mkdir(parents=True)
         config.write_text("# stale\n")
 
@@ -137,7 +137,7 @@ class TaskFileTests(unittest.TestCase):
         self.assertFalse(config.exists(), "ghostty config was not removed when OFF")
 
     def test_ghostty_removal_uses_the_macos_application_support_path(self):
-        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config"
+        config = self.home / "Library/Application Support/com.mitchellh.ghostty/config.ghostty"
         config.parent.mkdir(parents=True)
         config.write_text("# stale\n")
 
@@ -158,7 +158,7 @@ class TaskFileTests(unittest.TestCase):
         self.assertFalse(legacy.exists(), "legacy ghostty config was not removed when OFF")
 
     def test_ghostty_ignore_leaves_existing_config_alone(self):
-        config = self.home / ".config/ghostty/config"
+        config = self.home / ".config/ghostty/config.ghostty"
         config.parent.mkdir(parents=True)
         config.write_text("# hand written\n")
 
