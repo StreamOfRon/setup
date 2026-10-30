@@ -91,7 +91,10 @@
 
 - name: Rename legacy Ghostty config to the new filename
   ansible.builtin.command:
-    cmd: "mv {{ ghostty_legacy_config_path }} {{ ghostty_config_path }}"
+    argv:
+      - mv
+      - "{{ ghostty_legacy_config_path }}"
+      - "{{ ghostty_config_path }}"
     removes: "{{ ghostty_legacy_config_path }}"
     creates: "{{ ghostty_config_path }}"
   when: install_ghostty | default(false) == true
