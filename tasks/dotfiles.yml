@@ -7,10 +7,26 @@
     - files/.vimrc
     - files/.gitignore
 
-- name: .zshrc
+- name: .zshrc.setup
   ansible.builtin.template:
     src: templates/zshrc.j2
-    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc.setup"
+    mode: "0644"
+
+- name: .zshrc (source zshrc.local)
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
+    line: "[[ ! -f ~/.zshrc.local ]] || source ~/.zshrc.local"
+    regexp: '^\[\[ ! -f ~/.zshrc\.local \]\] \|\| source ~/.zshrc\.local$'
+    create: true
+    mode: "0644"
+
+- name: .zshrc (source zshrc.setup)
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
+    line: "[[ ! -f ~/.zshrc.setup ]] || source ~/.zshrc.setup"
+    regexp: '^\[\[ ! -f ~/.zshrc\.setup \]\] \|\| source ~/.zshrc\.setup$'
+    insertbefore: '.*\.zshrc\.local'
     mode: "0644"
 
 - name: Install git-credential-manager (needs SUDO)

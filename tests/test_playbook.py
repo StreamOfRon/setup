@@ -34,6 +34,7 @@ BASE_PLAY = """\
       ansible.builtin.set_fact:
         ansible_facts:
           pkg_mgr: "{{ fake_pkg_mgr }}"
+          os_family: Debian
           system: "{{ fake_system }}"
           machine: x86_64
           env:
@@ -186,6 +187,83 @@ class TaskFileTests(unittest.TestCase):
                 "groupname": "test",
                 "packages": ["zstd"],
             },
+        )
+
+
+class ZshrcIncludeTests(TaskFileTests):
+    """The playbook manages ~/.zshrc by include, never by rewriting it."""
+
+    SETUP_LINE = "[[ ! -f ~/.zshrc.setup ]] || source ~/.zshrc.setup"
+    LOCAL_LINE = "[[ ! -f ~/.zshrc.local ]] || source ~/.zshrc.local"
+
+    def test_fresh_machine_gets_the_include_before_the_local_override(self):
+        self.run_tasks("tasks/dotfiles.yml")
+
+        zshrc = (self.home / ".zshrc").read_text()
+        self.assertIn(self.SETUP_LINE, zshrc)
+        self.assertIn(self.LOCAL_LINE, zshrc)
+        self.assertLess(
+            zshrc.index(self.SETUP_LINE),
+            zshrc.index(self.LOCAL_LINE),
+            "the setup include must be sourced before the local override",
+        )
+
+    def test_setup_include_file_is_written_without_the_local_override(self):
+        self.run_tasks("tasks/dotfiles.yml")
+
+        include = (self.home / ".zshrc.setup").read_text()
+        self.assertIn('export PATH="$HOME/.local/bin:$PATH"', include)
+        self.assertNotIn(
+            ".zshrc.local", include, "the local override lives in .zshrc itself"
+        )
+
+    def test_setup_line_is_inserted_before_an_existing_local_line(self):
+        (self.home / ".zshrc").write_text(
+            "export PATH=\"$HOME/bin:$PATH\"\n"
+            "alias ll='ls -l'\n"
+            + self.LOCAL_LINE + "\n"
+        )
+
+        self.run_tasks("tasks/dotfiles.yml")
+
+        lines = (self.home / ".zshrc").read_text().splitlines()
+        self.assertEqual(
+            lines,
+            [
+                "export PATH=\"$HOME/bin:$PATH\"",
+                "alias ll='ls -l'",
+                self.SETUP_LINE,
+                self.LOCAL_LINE,
+            ],
+        )
+
+    def test_a_user_placed_setup_line_is_not_moved(self):
+        (self.home / ".zshrc").write_text(
+            "# my personal rc\n"
+            + self.SETUP_LINE + "\n"
+            "alias gs='git status'\n"
+            + self.LOCAL_LINE + "\n"
+        )
+
+        self.run_tasks("tasks/dotfiles.yml")
+
+        lines = (self.home / ".zshrc").read_text().splitlines()
+        self.assertEqual(
+            lines,
+            [
+                "# my personal rc",
+                self.SETUP_LINE,
+                "alias gs='git status'",
+                self.LOCAL_LINE,
+            ],
+        )
+
+    def test_zshrc_template_does_not_source_the_local_override(self):
+        template = (ROOT / "templates/zshrc.j2").read_text()
+        self.assertNotIn(
+            ".zshrc.local",
+            template,
+            "the local override line is owned by the .zshrc tasks",
         )
 
 
