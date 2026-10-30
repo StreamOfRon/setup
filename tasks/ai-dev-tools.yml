@@ -118,14 +118,16 @@
   when: install_ai_dev_tools | default(false) == true
 
 - name: Install agent skills (StreamOfRon/agent-skills)
-  ansible.builtin.command: npx -y skills add -g StreamOfRon/agent-skills
+  # -a '*' and -y are for the skills CLI itself (the first -y only answers npx):
+  # without them it prompts interactively and fails in non-TTY ansible-pull runs.
+  ansible.builtin.command: npx -y skills add -g -a '*' -y StreamOfRon/agent-skills
   changed_when: false
   when:
     - install_ai_dev_tools | default(false) == true
     - npx_binary.rc | default(1) == 0
 
 - name: Install agent skills (crusty-old-engineer)
-  ansible.builtin.command: npx -y skills add -g microsoft/amplifier-bundle-skills --skill crusty-old-engineer
+  ansible.builtin.command: npx -y skills add -g -a '*' -y microsoft/amplifier-bundle-skills --skill crusty-old-engineer
   changed_when: false
   when:
     - install_ai_dev_tools | default(false) == true
