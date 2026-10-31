@@ -99,10 +99,40 @@
     creates: "{{ ghostty_config_path }}"
   when: install_ghostty | default(false) == true
 
+- name: Render the managed Ghostty configuration block
+  ansible.builtin.set_fact:
+    ghostty_rendered_config: "{{ lookup('ansible.builtin.template', 'files/ghostty.conf') }}"
+  when: install_ghostty | default(false) == true
+
+- name: Stat existing Ghostty config (for legacy migration)
+  ansible.builtin.stat:
+    path: "{{ ghostty_config_path }}"
+  register: ghostty_config_stat
+  when: install_ghostty | default(false) == true
+
+- name: Slurp existing Ghostty config (for legacy migration)
+  ansible.builtin.slurp:
+    src: "{{ ghostty_config_path }}"
+  register: ghostty_config_slurp
+  when:
+    - install_ghostty | default(false) == true
+    - ghostty_config_stat.stat.exists | default(false)
+
+- name: Remove legacy unmarked Ghostty config before managing it as a block
+  ansible.builtin.file:
+    path: "{{ ghostty_config_path }}"
+    state: absent
+  when:
+    - install_ghostty | default(false) == true
+    - ghostty_config_stat.stat.exists | default(false)
+    - ghostty_config_slurp.content | default('') | b64decode == ghostty_rendered_config
+
 - name: Install Ghostty configuration
-  ansible.builtin.template:
-    src: files/ghostty.conf
-    dest: "{{ ghostty_config_path }}"
+  ansible.builtin.blockinfile:
+    path: "{{ ghostty_config_path }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - ghostty configuration"
+    block: "{{ ghostty_rendered_config }}"
+    create: true
     mode: "0644"
   when: install_ghostty | default(false) == true
 
