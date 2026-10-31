@@ -79,6 +79,26 @@
       "effect": "allow"
     },
     {
+      "action": "external_directory",
+      "resource": "~/.cache/opencode/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/var/folders/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/private/var/folders/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/var/tmp/*",
+      "effect": "allow"
+    },
+    {
       "action": "shell",
       "resource": "kubectl *",
       "effect": "ask"
@@ -97,6 +117,16 @@
       "action": "shell",
       "resource": "kubectl kustomize *",
       "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "find / *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "find /",
+      "effect": "deny"
     }
   ],
   "providers": {
