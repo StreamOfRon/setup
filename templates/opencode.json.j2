@@ -152,7 +152,27 @@
           "limit": {
             "context": 160000,
             "output": 32768
-          }
+          },
+          "variants": [
+						{
+							"id": "low",
+							"body": {
+								"reasoning_effort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"body": {
+								"reasoning_effort": "medium"
+							}
+						},
+						{
+							"id": "xhigh",
+							"body": {
+								"reasoning_effort": "xhigh"
+							}
+						}
+					]
         },
 				"llamaswap/thinkingcap-qwen3.8-27b": {
 					"name": "ThinkingCap Qwen3.8 27b",
@@ -216,7 +236,15 @@
         "apiKey": "{env:TIINY_API_TOKEN}"
       },
       "body": {
-        "temperature": 0.6
+        "temperature": 0.75,
+        "top_p": 0.92,
+        "frequency_penalty": 0.35,
+        "repetition_penalty": 1.15,
+        "stop": [
+          "\n## Agent Complete",
+          "\n# --- END BLOCK ---",
+          "<|eot_id|>"
+        ]
       },
       "models": {
         "Qwen/Qwen3.6-35B-A3B-Turbo": {
@@ -233,7 +261,27 @@
           "limit": {
             "context": 262144,
             "output": 32768
-          }
+          },
+          "variants": [
+						{
+							"id": "low",
+							"body": {
+								"reasoning_effort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"body": {
+								"reasoning_effort": "medium"
+							}
+						},
+						{
+							"id": "xhigh",
+							"body": {
+								"reasoning_effort": "xhigh"
+							}
+						}
+					]
         },
         "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
           "name": "Ornith-1.5-35B-A3B",
@@ -253,7 +301,15 @@
         "apiKey": "{env:TIINY_API_TOKEN}"
       },
       "body": {
-        "temperature": 0.6
+        "temperature": 0.75,
+        "top_p": 0.92,
+        "frequency_penalty": 0.35,
+        "repetition_penalty": 1.15,
+        "stop": [
+          "\n## Agent Complete",
+          "\n# --- END BLOCK ---",
+          "<|eot_id|>"
+        ]
       },
       "models": {
         "Qwen/Qwen3.6-35B-A3B-Turbo": {
@@ -270,7 +326,27 @@
           "limit": {
             "context": 262144,
             "output": 32768
-          }
+          },
+          "variants": [
+						{
+							"id": "low",
+							"body": {
+								"reasoning_effort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"body": {
+								"reasoning_effort": "medium"
+							}
+						},
+						{
+							"id": "xhigh",
+							"body": {
+								"reasoning_effort": "xhigh"
+							}
+						}
+					]
         },
         "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
           "name": "Ornith-1.5-35B-A3B",
