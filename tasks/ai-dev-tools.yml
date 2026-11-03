@@ -73,7 +73,6 @@
   loop:
     - "{{ lookup('env', 'HOME') }}/.config/opencode/opencode.json"
     - "{{ lookup('env', 'HOME') }}/.config/opencode/cli.json"
-    - "{{ lookup('env', 'HOME') }}/.config/opencode/tui.jsonc"
     - "{{ lookup('env', 'HOME') }}/.omp/agent/config.yml"
     - "{{ lookup('env', 'HOME') }}/.omp/agent/models.yml"
     - "{{ lookup('env', 'HOME') }}/.config/worktrunk/config.toml"

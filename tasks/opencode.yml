@@ -15,9 +15,3 @@
     src: templates/opencode-cli.json.j2
     dest: "{{ lookup('env', 'HOME') }}/.config/opencode/cli.json"
     mode: "0600"
-
-- name: Manage opencode tui.jsonc
-  ansible.builtin.template:
-    src: templates/opencode-tui.jsonc.j2
-    dest: "{{ lookup('env', 'HOME') }}/.config/opencode/tui.jsonc"
-    mode: "0644"
