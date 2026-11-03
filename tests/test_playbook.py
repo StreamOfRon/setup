@@ -281,6 +281,7 @@ class GhosttyConfigFileTests(unittest.TestCase):
         "background-opacity",
         "background-blur",
         "link-url",
+        "link-osc8",
         "copy-on-select",
     }
 
