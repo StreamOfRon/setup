@@ -26,3 +26,14 @@ set nowb
 set noswapfile
 
 set encoding=utf8
+
+" Disable modelines: bundled indent scripts (e.g. indent/json.vim) end with a
+" modeline like "vim:set ... ts=8 noet:" which, when sourced, clobbers the
+" buffer's tab settings with an 8-wide non-expanded tab for JSON files.
+set nomodeline
+
+" JSON: use expanded 2-space indentation instead of the bundled 8-space tabs.
+augroup json_indent
+  autocmd!
+  autocmd FileType json,jsonc setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+augroup END
