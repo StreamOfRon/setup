@@ -82,6 +82,14 @@ the `setup-config` TUI.
   with a presence check and skip (with a debug note) when the binary is
   missing rather than failing the run.
 
+### Agent skills
+- `tasks/ai-dev-tools.yml` runs `npx -y skills add -g` on every full apply, so
+  new and updated skills in the source repos are picked up automatically. Quiet
+  syncs skip the playbook, so propagation waits for the next full apply.
+- Skills install to the shared `~/.agents/skills` store; `-a claude-code` links
+  them into `~/.claude/skills`. OpenCode discovers `~/.agents/skills` natively,
+  so it must not be passed to `-a`.
+
 ### Verification
 - Run `ansible-playbook --syntax-check -i localhost, main.yml` after edits.
 - Run `ansible-lint` on changed task files.

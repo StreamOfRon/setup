@@ -120,15 +120,16 @@
 - name: Install agent skills (StreamOfRon/agent-skills)
   # -a and -y are for the skills CLI itself (the first -y only answers npx):
   # without them it prompts interactively and fails in non-TTY ansible-pull runs.
-  # Target only opencode and claude-code; '*' would create dirs for every agent.
-  ansible.builtin.command: npx -y skills add -g -a opencode claude-code -y StreamOfRon/agent-skills
+  # Skills land in the shared ~/.agents/skills store; OpenCode discovers that
+  # path natively, so only claude-code (which reads ~/.claude/skills) gets a link.
+  ansible.builtin.command: npx -y skills add -g -a claude-code -y StreamOfRon/agent-skills
   changed_when: false
   when:
     - install_ai_dev_tools | default(false) == true
     - npx_binary.rc | default(1) == 0
 
 - name: Install agent skills (crusty-old-engineer)
-  ansible.builtin.command: npx -y skills add -g -a opencode claude-code -y microsoft/amplifier-bundle-skills --skill crusty-old-engineer
+  ansible.builtin.command: npx -y skills add -g -a claude-code -y microsoft/amplifier-bundle-skills --skill crusty-old-engineer
   changed_when: false
   when:
     - install_ai_dev_tools | default(false) == true
