@@ -134,7 +134,7 @@
   "providers": {
     "litellm": {
       "name": "LiteLLM",
-      "package": "aisdk:@ai-sdk/openai-compatible",
+      "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "https://litellm.ext.cshome.link/v1",
         "timeout": false
@@ -142,6 +142,9 @@
       "models": {
         "llamaswap/qwen3.6-35b-a3b": {
           "name": "Qwen3.6 35b-a3b",
+          "settings": {
+            "concurrency": 1
+          },
           "limit": {
             "context": 131072,
             "output": 32768
@@ -149,6 +152,9 @@
         },
         "llamaswap/qwen3.8-27b": {
           "name": "Qwen3.8 27b",
+          "settings": {
+            "concurrency": 1
+          },
           "limit": {
             "context": 160000,
             "output": 32768
@@ -176,6 +182,9 @@
         },
 				"llamaswap/thinkingcap-qwen3.8-27b": {
 					"name": "ThinkingCap Qwen3.8 27b",
+					"settings": {
+						"concurrency": 1
+					},
 					"limit": {
 						"context": 160000,
 						"output": 32768
@@ -230,10 +239,11 @@
     },
     "tiiny-local": {
       "name": "Tiiny Local",
-      "package": "aisdk:@ai-sdk/openai-compatible",
+      "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://api.tiiny/v1",
-        "apiKey": "{env:TIINY_API_TOKEN}"
+        "apiKey": "{env:TIINY_API_TOKEN}",
+        "concurrency": 1
       },
       "body": {
         "temperature": 0.85,
@@ -295,10 +305,11 @@
     },
     "tiiny-network": {
       "name": "Tiiny Network",
-      "package": "aisdk:@ai-sdk/openai-compatible",
+      "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://tiinyhost/v1",
-        "apiKey": "{env:TIINY_API_TOKEN}"
+        "apiKey": "{env:TIINY_API_TOKEN}",
+        "concurrency": 1
       },
       "body": {
         "temperature": 0.75,
