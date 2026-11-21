@@ -167,6 +167,27 @@ class TaskFileTests(unittest.TestCase):
 
         self.assertEqual(config.read_text(), "# hand written\n")
 
+    def test_provider_queue_legacy_plugin_file_is_removed_when_the_group_is_off(self):
+        legacy = self.home / ".config/opencode/plugins/provider-queue.js"
+        legacy.parent.mkdir(parents=True)
+        legacy.write_text("// stale inline plugin\n")
+
+        self.run_tasks(
+            "tasks/ai-dev-tools.yml",
+            {
+                "install_ai_dev_tools": False,
+                # normally provided by main.yml pre_tasks; ai-dev-tools.yml
+                # imports package_group.yml which evaluates these conditions.
+                "brew_available": False,
+                "installed_apt_packages": {"stdout_lines": []},
+            },
+        )
+
+        self.assertFalse(
+            legacy.exists(),
+            "legacy inline provider-queue plugin survived the group-OFF cleanup",
+        )
+
     def test_worktrunk_and_herdr_config_are_written_without_binaries(self):
         self.run_tasks("tasks/herdr.yml", {"install_ai_dev_tools": True})
 
