@@ -16,11 +16,10 @@
     dest: "{{ lookup('env', 'HOME') }}/.config/opencode/opencode.json"
     mode: "0644"
 
-- name: Manage opencode provider-queue plugin
-  ansible.builtin.template:
-    src: templates/opencode-plugin-provider-queue.js.j2
-    dest: "{{ lookup('env', 'HOME') }}/.config/opencode/plugins/provider-queue.js"
-    mode: "0644"
+- name: Remove legacy provider-queue plugin file
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/opencode/plugins/provider-queue.js"
+    state: absent
 
 - name: Manage opencode cli.json
   ansible.builtin.template:
