@@ -243,6 +243,24 @@
         }
       }
     },
+    "strata-local": {
+      "name": "Strata Local",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://localhost:47831/v1",
+        "apiKey": "-",
+        "concurrency": 1
+      },
+      "models": {
+        "inkling-2-mini-sq-15": {
+          "name": "Inkling-2 Mini",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        }
+      }
+    },
     "tiiny-local": {
       "name": "Tiiny Local",
       "package": "@opencode/ai/providers/openai-compatible",
@@ -301,6 +319,14 @@
         },
         "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
           "name": "Ornith-1.5-35B-A3B",
+          "reasoning": true,
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "RecursiveSI/flint": {
+          "name": "Flint",
           "reasoning": true,
           "limit": {
             "context": 262144,
@@ -367,6 +393,14 @@
         },
         "ornith-ai/Ornith-1.5-35B-A3B-Turbo": {
           "name": "Ornith-1.5-35B-A3B",
+          "reasoning": true,
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "RecursiveSI/flint": {
+          "name": "Flint",
           "reasoning": true,
           "limit": {
             "context": 262144,
