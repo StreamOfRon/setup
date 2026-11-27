@@ -1,11 +1,11 @@
-setupVersion: 2
+setupVersion: 3
 modelRoles:
   tiny: apple/on-device
   smol: apple/on-device
   plan: opencode-go/kimi-k3:auto
   web: web/searxng
-  default: litellm/llamaswap/thinkingcap-qwen3.8-27b
-  task: litellm/llamaswap/qwen3.6-35b-a3b
+  default: opencode-go/qwen3.8-flash
+  advisor: opencode-go/kimi-k3:auto
 providers:
   maxInFlightRequests:
     litellm: 1
@@ -24,21 +24,21 @@ ida:
 bash:
   direnv: auto
   patterns:
-    - match: "kubectl-readonly *"
+    - match: kubectl-readonly *
       approval: allow
-    - match: "kubectl-readonly"
+    - match: kubectl-readonly
       approval: allow
-    - match: "kubectl readonly *"
+    - match: kubectl readonly *
       approval: allow
-    - match: "kubectl readonly"
+    - match: kubectl readonly
       approval: allow
-    - match: "kubectl kustomize *"
+    - match: kubectl kustomize *
       approval: allow
-    - match: "kubectl kustomize"
+    - match: kubectl kustomize
       approval: allow
-    - match: "kubectl *"
+    - match: kubectl *
       approval: prompt
-    - match: "kubectl"
+    - match: kubectl
       approval: prompt
 bashInterceptor:
   enabled: false
@@ -131,3 +131,5 @@ dev:
   autoqaConsent: granted
 lsp:
   lazy: false
+update:
+  auto: true
